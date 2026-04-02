@@ -1,6 +1,4 @@
-use std::borrow::Borrow;
-
-use crate::base::value::{StaticConcurrent, Value};
+use crate::base::value::{Concurrent, Value};
 use crate::control::applicative::Applicative;
 
 pub trait Monad: Applicative {
@@ -11,12 +9,11 @@ pub trait Monad: Applicative {
         Self::pure(x)
     }
 
-    fn bind<A, B, G, GI>(x: Self::Type<A>, g: G) -> Self::Type<B>
+    fn bind<A, B, G>(x: Self::Type<A>, g: G) -> Self::Type<B>
     where
         A: Value,
         B: Value,
-        G: Borrow<GI> + Value,
-        GI: Fn(A) -> Self::Type<B> + StaticConcurrent;
+        G: for<'a> Value<View<'a>: Fn(A) -> Self::Type<B>>;
 
     fn mchain<A>(x: Self::Type<A>) -> MonadChain<Self, A>
     where
@@ -39,7 +36,7 @@ pub trait Monad: Applicative {
 pub struct MonadChain<I, A>
 where
     I: Monad,
-    A: StaticConcurrent,
+    A: Concurrent,
 {
     value: I::Type<A>,
 }
@@ -47,7 +44,7 @@ where
 impl<I, A> MonadChain<I, A>
 where
     I: Monad,
-    A: StaticConcurrent,
+    A: Concurrent,
 {
     fn new(value: I::Type<A>) -> Self {
         Self { value }
@@ -63,11 +60,10 @@ where
     I: Monad,
     A: Value,
 {
-    pub fn bind<B, G, GI>(self, g: G) -> MonadChain<I, B>
+    pub fn bind<B, G>(self, g: G) -> MonadChain<I, B>
     where
         B: Value,
-        G: Borrow<GI> + Value,
-        GI: Fn(A) -> I::Type<B> + StaticConcurrent,
+        G: for<'a> Value<View<'a>: Fn(A) -> I::Type<B>>,
     {
         MonadChain::new(I::bind(self.value, g))
     }

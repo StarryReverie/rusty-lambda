@@ -1,5 +1,5 @@
 use crate::base::hkt::TypeConstructor1;
-use crate::base::value::StaticConcurrent;
+use crate::base::value::Concurrent;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 pub enum Maybe<T> {
@@ -42,5 +42,5 @@ impl TypeConstructor1 for MaybeInstance {
     type Type<A1>
         = Maybe<A1>
     where
-        A1: StaticConcurrent;
+        A1: Concurrent;
 }

@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use crate::base::hkt::TypeConstructor1;
-use crate::base::value::StaticConcurrent;
+use crate::base::value::Concurrent;
 use crate::data::maybe::Maybe;
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
@@ -93,7 +93,7 @@ impl TypeConstructor1 for ListInstance {
     type Type<A1>
         = List<A1>
     where
-        A1: StaticConcurrent;
+        A1: Concurrent;
 }
 
 #[cfg(test)]

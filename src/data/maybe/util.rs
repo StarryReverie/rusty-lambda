@@ -1,15 +1,12 @@
-use std::borrow::Borrow;
-
-use crate::base::value::{StaticConcurrent, Value};
+use crate::base::value::Value;
 use crate::control::functor::Functor;
 use crate::data::maybe::{Maybe, MaybeInstance};
 
-pub fn maybe<A, B, G, GI>(default: B, g: G, x: Maybe<A>) -> B
+pub fn maybe<A, B, G>(default: B, g: G, x: Maybe<A>) -> B
 where
     A: Value,
     B: Value,
-    G: Borrow<GI> + Value,
-    GI: Fn(A) -> B + StaticConcurrent,
+    G: for<'a> Value<View<'a>: Fn(A) -> B>,
 {
     let y = MaybeInstance::fmap(g, x);
     from_maybe(default, y)

@@ -1,6 +1,4 @@
-use std::borrow::Borrow;
-
-use crate::base::value::{StaticConcurrent, Value};
+use crate::base::value::Value;
 use crate::control::applicative::Applicative;
 use crate::control::functor::Functor;
 use crate::data::list::{List, ListInstance};
@@ -14,12 +12,11 @@ impl Applicative for ListInstance {
         List::singleton(x)
     }
 
-    fn apply<A, B, G, GI>(gs: Self::Type<G>, xs: Self::Type<A>) -> Self::Type<B>
+    fn apply<A, B, G>(gs: Self::Type<G>, xs: Self::Type<A>) -> Self::Type<B>
     where
         A: Value,
         B: Value,
-        G: Borrow<GI> + Value,
-        GI: Fn(A) -> B + StaticConcurrent,
+        G: for<'a> Value<View<'a>: Fn(A) -> B>,
     {
         match gs.decompose() {
             Maybe::Just((g, gs)) => {
@@ -33,6 +30,10 @@ impl Applicative for ListInstance {
 
 #[cfg(test)]
 mod tests {
+    use std::sync::Arc;
+
+    use crate::base::value::arc;
+
     use super::*;
 
     #[test]
@@ -49,7 +50,7 @@ mod tests {
 
     #[test]
     fn test_apply_nil_xs() {
-        let gs = List::singleton(|x: i32| x + 1);
+        let gs = List::singleton(&|x: i32| x + 1);
         let xs: List<i32> = List::empty();
         assert_eq!(ListInstance::apply(gs, xs), List::empty());
     }
@@ -71,20 +72,21 @@ mod tests {
     #[test]
     fn test_applicative_identity_law() {
         let id = |x| x;
+        let gs = List::singleton(arc(id));
 
         let xs = List::cons(1, List::cons(2, List::cons(3, List::empty())));
-        assert_eq!(ListInstance::apply(List::singleton(id), xs.clone()), xs);
+        assert_eq!(ListInstance::apply(gs.clone(), xs.clone()), xs);
 
         let xs: List<i32> = List::empty();
-        assert_eq!(ListInstance::apply(List::singleton(id), xs), List::empty());
+        assert_eq!(ListInstance::apply(gs, xs), List::empty());
     }
 
     #[test]
     fn test_applicative_homomorphism_law() {
         let h = |x| x * 2;
         assert_eq!(
-            ListInstance::apply(ListInstance::pure(h), ListInstance::pure(3)),
-            ListInstance::pure(h(3))
+            ListInstance::apply(ListInstance::pure(arc(h)), ListInstance::pure(3)),
+            ListInstance::pure(h(3)),
         );
     }
 
@@ -96,37 +98,35 @@ mod tests {
 
         let gs = List::cons(add10, List::cons(mul2, List::empty()));
         let lhs = ListInstance::apply(gs.clone(), ListInstance::pure(x));
-        let rhs = ListInstance::apply(ListInstance::pure(move |g: fn(i32) -> i32| g(x)), gs);
+        let rhs = ListInstance::apply(ListInstance::pure(arc(move |g: fn(i32) -> i32| g(x))), gs);
         assert_eq!(lhs, rhs);
 
         let gs: List<fn(i32) -> i32> = List::empty();
         let lhs = ListInstance::apply(gs.clone(), ListInstance::pure(x));
-        let rhs = ListInstance::apply(ListInstance::pure(move |g: fn(i32) -> i32| g(x)), gs);
+        let rhs = ListInstance::apply(ListInstance::pure(arc(move |g: fn(i32) -> i32| g(x))), gs);
         assert_eq!(lhs, rhs);
     }
 
-    // #[test]
-    // fn test_applicative_composition_law() {
-    //     let compose =
-    //         |g: fn(i32) -> i32| -> Arc<dyn Fn(fn(i32) -> i32) -> Arc<dyn Fn(i32) -> i32> + Send + Sync>
-    //     {
-    //         Arc::new(move |h: fn(i32) -> i32| Arc::new(move |x: i32| g(h(x))))
-    //     };
+    #[test]
+    fn test_applicative_composition_law() {
+        let compose = |g: fn(i32) -> i32| -> Arc<
+            dyn Fn(fn(i32) -> i32) -> Arc<dyn Fn(i32) -> i32 + Send + Sync> + Send + Sync,
+        > { arc(move |h| arc(move |x| g(h(x)))) };
 
-    //     let add3: fn(i32) -> i32 = |x| x + 3;
-    //     let mul2: fn(i32) -> i32 = |x| x * 2;
-    //     let inc: fn(i32) -> i32 = |x| x + 1;
+        let add3: fn(i32) -> i32 = |x| x + 3;
+        let mul2: fn(i32) -> i32 = |x| x * 2;
+        let inc: fn(i32) -> i32 = |x| x + 1;
 
-    //     let xs = List::cons(1, List::cons(2, List::empty()));
-    //     let fs = List::cons(add3, List::cons(mul2, List::empty()));
-    //     let hs = List::cons(inc, List::cons(mul2, List::empty()));
+        let xs = List::cons(1, List::cons(2, List::empty()));
+        let gs = List::cons(add3, List::cons(mul2, List::empty()));
+        let hs = List::cons(inc, List::cons(mul2, List::empty()));
 
-    //     let composed = ListInstance::apply(
-    //         ListInstance::apply(ListInstance::pure(compose), fs.clone()),
-    //         hs.clone(),
-    //     );
-    //     let lhs = ListInstance::apply(composed, xs.clone());
-    //     let rhs = ListInstance::apply(fs, ListInstance::apply(hs, xs));
-    //     assert_eq!(lhs, rhs);
-    // }
+        let composed = ListInstance::apure(arc(compose))
+            .apply(gs.clone())
+            .apply(hs.clone())
+            .eval();
+        let lhs = ListInstance::apply(composed, xs.clone());
+        let rhs = ListInstance::apply(gs, ListInstance::apply(hs, xs));
+        assert_eq!(lhs, rhs);
+    }
 }

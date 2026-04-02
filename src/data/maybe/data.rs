@@ -1,0 +1,46 @@
+use crate::base::hkt::TypeConstructor1;
+use crate::base::value::StaticConcurrent;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+pub enum Maybe<T> {
+    Just(T),
+    #[default]
+    Nothing,
+}
+
+impl<T> Maybe<T> {
+    pub fn option(self) -> Option<T> {
+        match self {
+            Self::Just(x) => Some(x),
+            Self::Nothing => None,
+        }
+    }
+}
+
+impl<T, U> From<Option<U>> for Maybe<T>
+where
+    U: Into<T>,
+{
+    fn from(value: Option<U>) -> Self {
+        match value {
+            Some(x) => Maybe::Just(x.into()),
+            None => Maybe::Nothing,
+        }
+    }
+}
+
+impl<T> From<Maybe<T>> for Option<T> {
+    fn from(value: Maybe<T>) -> Self {
+        value.option()
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+pub struct MaybeInstance;
+
+impl TypeConstructor1 for MaybeInstance {
+    type Type<A1>
+        = Maybe<A1>
+    where
+        A1: StaticConcurrent;
+}

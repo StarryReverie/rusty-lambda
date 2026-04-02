@@ -1,6 +1,7 @@
 mod applicative;
 mod data;
 mod functor;
+mod monad;
 mod util;
 
 pub use data::{Maybe, MaybeInstance};

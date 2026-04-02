@@ -1,0 +1,115 @@
+use std::sync::Arc;
+
+use crate::base::hkt::TypeConstructor1;
+use crate::base::value::StaticConcurrent;
+use crate::data::maybe::Maybe;
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+pub struct ListNode<T> {
+    head: T,
+    tail: List<T>,
+}
+
+impl<T> ListNode<T> {
+    fn new(head: T, tail: List<T>) -> Self {
+        Self { head, tail }
+    }
+
+    pub fn head(&self) -> &T {
+        &self.head
+    }
+
+    pub fn tail(&self) -> &List<T> {
+        &self.tail
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+pub enum List<T> {
+    #[default]
+    Nil,
+    Cons(Arc<ListNode<T>>),
+}
+
+impl<T> List<T> {
+    pub fn empty() -> Self {
+        Self::Nil
+    }
+
+    pub fn cons(head: T, tail: List<T>) -> Self {
+        Self::Cons(Arc::new(ListNode::new(head, tail)))
+    }
+
+    pub fn singleton(head: T) -> Self {
+        Self::cons(head, Self::empty())
+    }
+
+    pub fn head(&self) -> Maybe<&T> {
+        match self {
+            Self::Cons(node) => Maybe::Just(node.head()),
+            Self::Nil => Maybe::Nothing,
+        }
+    }
+
+    pub fn tail(&self) -> Maybe<&List<T>> {
+        match self {
+            Self::Cons(node) => Maybe::Just(node.tail()),
+            Self::Nil => Maybe::Nothing,
+        }
+    }
+}
+
+impl<T> List<T>
+where
+    T: Clone,
+{
+    pub fn append(self, other: List<T>) -> List<T> {
+        match self {
+            Self::Cons(mut node) => {
+                let _ = Arc::make_mut(&mut node);
+                let ListNode { head, tail } = Arc::into_inner(node).unwrap();
+                List::Cons(Arc::new(ListNode::new(head, tail.append(other))))
+            }
+            Self::Nil => other,
+        }
+    }
+
+    pub fn decompose(self) -> Maybe<(T, List<T>)> {
+        match self {
+            Self::Cons(mut node) => {
+                let _ = Arc::make_mut(&mut node);
+                let ListNode { head, tail } = Arc::into_inner(node).unwrap();
+                Maybe::Just((head, tail))
+            }
+            Self::Nil => Maybe::Nothing,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+pub struct ListInstance;
+
+impl TypeConstructor1 for ListInstance {
+    type Type<A1>
+        = List<A1>
+    where
+        A1: StaticConcurrent;
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_list_cons() {
+        let xs = List::cons(1, List::cons(2, List::cons(3, List::empty())));
+        let mut cur = xs.clone();
+        for x in [1, 2, 3] {
+            assert_eq!(cur.head(), Maybe::Just(&x));
+            cur = match cur.tail() {
+                Maybe::Just(tail) => tail.clone(),
+                _ => unreachable!(),
+            };
+        }
+    }
+}

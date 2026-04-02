@@ -1,3 +1,4 @@
+mod applicative;
 mod data;
 mod functor;
 

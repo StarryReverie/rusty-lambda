@@ -46,11 +46,11 @@ impl Primitive for u64 {}
 impl Primitive for u128 {}
 impl Primitive for usize {}
 
-impl<'a, T> Primitive for &'a T {}
+impl<T> Primitive for &T {}
 
-impl<'a> Primitive for &'a str {}
+impl Primitive for &str {}
 
-impl<'a, T> Primitive for &'a [T] {}
+impl<T> Primitive for &[T] {}
 
 impl<T, const N: usize> Primitive for [T; N] where T: Copy {}
 

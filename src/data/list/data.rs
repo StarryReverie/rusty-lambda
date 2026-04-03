@@ -86,6 +86,30 @@ where
     }
 }
 
+impl<T> FromIterator<T> for List<T> {
+    fn from_iter<I>(iter: I) -> Self
+    where
+        I: IntoIterator<Item = T>,
+    {
+        fn foldr_recursive<U>(mut iter: impl Iterator<Item = U>) -> List<U> {
+            match iter.next() {
+                Some(x) => List::cons(x, foldr_recursive(iter)),
+                None => List::empty(),
+            }
+        }
+        foldr_recursive(iter.into_iter())
+    }
+}
+
+impl<I, T> From<I> for List<T>
+where
+    I: IntoIterator<Item = T>,
+{
+    fn from(value: I) -> Self {
+        Self::from_iter(value)
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 pub struct ListInstance;
 
@@ -111,5 +135,17 @@ mod tests {
                 _ => unreachable!(),
             };
         }
+    }
+
+    #[test]
+    fn test_list_from_vec() {
+        let xs = List::from(vec![1, 2, 3]);
+        let (x1, xs) = xs.decompose().option().unwrap();
+        assert_eq!(x1, 1);
+        let (x2, xs) = xs.decompose().option().unwrap();
+        assert_eq!(x2, 2);
+        let (x3, xs) = xs.decompose().option().unwrap();
+        assert_eq!(x3, 3);
+        assert!(xs.decompose().option().is_none());
     }
 }

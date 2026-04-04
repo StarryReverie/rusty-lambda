@@ -30,8 +30,7 @@ impl Applicative for ListInstance {
 
 #[cfg(test)]
 mod tests {
-    use std::sync::Arc;
-
+    use crate::base::function::WrappedFn;
     use crate::base::value::arc;
 
     use super::*;
@@ -109,19 +108,22 @@ mod tests {
 
     #[test]
     fn test_applicative_composition_law() {
-        let compose = |g: fn(i32) -> i32| -> Arc<
-            dyn Fn(fn(i32) -> i32) -> Arc<dyn Fn(i32) -> i32 + Send + Sync> + Send + Sync,
-        > { arc(move |h| arc(move |x| g(h(x)))) };
+        let compose = WrappedFn::from(|g: WrappedFn<i32, i32>| {
+            WrappedFn::from(move |h: WrappedFn<i32, i32>| {
+                let g = g.clone();
+                WrappedFn::from(move |x: i32| g(h(x)))
+            })
+        });
 
-        let add3: fn(i32) -> i32 = |x| x + 3;
-        let mul2: fn(i32) -> i32 = |x| x * 2;
-        let inc: fn(i32) -> i32 = |x| x + 1;
+        let add3 = WrappedFn::from(|x| x + 3);
+        let mul2 = WrappedFn::from(|x| x * 2);
+        let inc = WrappedFn::from(|x| x + 1);
 
         let xs = List::cons(1, List::cons(2, List::empty()));
-        let gs = List::cons(add3, List::cons(mul2, List::empty()));
+        let gs = List::cons(add3, List::cons(mul2.clone(), List::empty()));
         let hs = List::cons(inc, List::cons(mul2, List::empty()));
 
-        let composed = ListInstance::apure(arc(compose))
+        let composed = ListInstance::apure(compose)
             .apply(gs.clone())
             .apply(hs.clone())
             .eval();

@@ -18,8 +18,7 @@ impl Functor for MaybeInstance {
 
 #[cfg(test)]
 mod tests {
-    use std::sync::Arc;
-
+    use crate::base::function::WrappedFn;
     use crate::base::value::arc;
 
     use super::*;
@@ -40,14 +39,11 @@ mod tests {
 
     #[test]
     fn test_fmap_just_func() {
-        fn g(
-            h: Arc<dyn Fn(i32) -> i32 + Send + Sync + 'static>,
-        ) -> Arc<dyn Fn(i32) -> i32 + Send + Sync + 'static> {
-            Arc::new(move |x| h(x) * 2)
+        fn g(h: WrappedFn<i32, i32>) -> WrappedFn<i32, i32> {
+            WrappedFn::from(move |x| h(x) * 2)
         }
 
-        let f: Maybe<Arc<dyn Fn(i32) -> i32 + Send + Sync + 'static>> =
-            Maybe::Just(Arc::new(|x: i32| x + 1));
+        let f = Maybe::Just(WrappedFn::from(|x: i32| x + 1));
         match MaybeInstance::fmap(arc(g), f) {
             Maybe::Just(h) => assert_eq!(h(1), 4),
             Maybe::Nothing => unreachable!(),

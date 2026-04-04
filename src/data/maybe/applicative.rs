@@ -25,6 +25,7 @@ impl Applicative for MaybeInstance {
 
 #[cfg(test)]
 mod tests {
+    use crate::base::function::{Curry, WrappedFn};
     use crate::base::value::arc;
 
     use super::*;
@@ -109,15 +110,15 @@ mod tests {
 
     #[test]
     fn test_chained_apply() {
-        let add = |x: i32| arc(move |y: i32| x + y);
+        let add = WrappedFn::curry(|x, y| x + y);
 
-        let f = MaybeInstance::apure(arc(add))
+        let f = MaybeInstance::apure(add.clone())
             .apply(Maybe::Just(1))
             .apply(Maybe::Just(2))
             .eval();
         assert_eq!(f, Maybe::Just(3));
 
-        let f = MaybeInstance::apure(arc(add))
+        let f = MaybeInstance::apure(add)
             .apply(Maybe::Just(1))
             .apply(Maybe::Nothing)
             .eval();

@@ -1,9 +1,9 @@
 use crate::base::function::ConcurrentFn;
 use crate::base::value::Value;
-use crate::control::applicative::Applicative;
-use crate::control::functor::Functor;
-use crate::control::monad::Monad;
-use crate::control::semigroup::last::{Last, LastInstance};
+use crate::control::context::applicative::Applicative;
+use crate::control::context::monad::Monad;
+use crate::control::structure::functor::Functor;
+use crate::control::structure::semigroup::last::{Last, LastInstance};
 
 impl Functor for LastInstance {
     fn fmap<A, B, G>(g: G, x: Self::Type<A>) -> Self::Type<B>

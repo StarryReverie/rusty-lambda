@@ -1,4 +1,4 @@
-use crate::control::monoid::Monoid;
+use crate::control::structure::monoid::Monoid;
 use crate::data::maybe::Maybe;
 
 impl<T> Monoid for Maybe<T>
@@ -12,7 +12,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::control::semigroup::Semigroup;
+    use crate::control::structure::semigroup::Semigroup;
     use crate::data::list::List;
 
     use super::*;

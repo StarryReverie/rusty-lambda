@@ -1,7 +1,7 @@
 use crate::base::function::ConcurrentFn;
 use crate::base::value::Value;
-use crate::control::applicative::Applicative;
-use crate::control::functor::identity::{Identity, IdentityInstance};
+use crate::control::context::applicative::Applicative;
+use crate::control::structure::functor::identity::{Identity, IdentityInstance};
 
 impl Applicative for IdentityInstance {
     fn pure<A>(x: A) -> Self::Type<A>

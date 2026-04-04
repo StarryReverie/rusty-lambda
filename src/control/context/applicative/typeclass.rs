@@ -1,6 +1,6 @@
 use crate::base::function::ConcurrentFn;
 use crate::base::value::{Concurrent, Value};
-use crate::control::functor::Functor;
+use crate::control::structure::functor::Functor;
 
 pub trait Applicative: Functor {
     fn pure<A>(x: A) -> Self::Type<A>

@@ -1,7 +1,7 @@
 use crate::base::function::ConcurrentFn;
 use crate::base::value::Value;
-use crate::control::applicative::Applicative;
-use crate::control::functor::Functor;
+use crate::control::context::applicative::Applicative;
+use crate::control::structure::functor::Functor;
 use crate::data::list::{List, ListInstance};
 use crate::data::maybe::Maybe;
 

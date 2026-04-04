@@ -1,7 +1,7 @@
 use crate::base::function::ConcurrentFn;
 use crate::base::value::Value;
-use crate::control::functor::identity::IdentityInstance;
-use crate::control::monad::Monad;
+use crate::control::context::monad::Monad;
+use crate::control::structure::functor::identity::IdentityInstance;
 
 impl Monad for IdentityInstance {
     fn bind<A, B, G>(x: Self::Type<A>, g: G) -> Self::Type<B>
@@ -17,7 +17,7 @@ impl Monad for IdentityInstance {
 #[cfg(test)]
 mod tests {
     use crate::base::function::WrappedFn;
-    use crate::control::functor::identity::Identity;
+    use crate::control::structure::functor::identity::Identity;
 
     use super::*;
 

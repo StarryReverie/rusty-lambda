@@ -1,5 +1,5 @@
-use crate::control::semigroup::Semigroup;
-use crate::control::semigroup::last::Last;
+use crate::control::structure::semigroup::Semigroup;
+use crate::control::structure::semigroup::last::Last;
 
 impl<T> Semigroup for Last<T> {
     fn associate(self, other: Self) -> Self {

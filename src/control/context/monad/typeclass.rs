@@ -1,6 +1,6 @@
 use crate::base::function::ConcurrentFn;
 use crate::base::value::{Concurrent, Value};
-use crate::control::applicative::Applicative;
+use crate::control::context::applicative::Applicative;
 
 pub trait Monad: Applicative {
     fn ret<A>(x: A) -> Self::Type<A>

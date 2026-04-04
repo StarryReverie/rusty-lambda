@@ -1,4 +1,4 @@
-use crate::control::semigroup::Semigroup;
+use crate::control::structure::semigroup::Semigroup;
 use crate::data::maybe::Maybe;
 
 impl<T> Semigroup for Maybe<T>

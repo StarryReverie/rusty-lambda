@@ -1,6 +1,6 @@
 use crate::base::function::ConcurrentFn;
 use crate::base::value::Value;
-use crate::control::monad::Monad;
+use crate::control::context::monad::Monad;
 use crate::data::maybe::{Maybe, MaybeInstance};
 
 impl Monad for MaybeInstance {

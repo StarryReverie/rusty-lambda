@@ -1,7 +1,7 @@
 use crate::base::function::ConcurrentFn;
 use crate::base::value::Value;
-use crate::control::functor::Functor;
-use crate::control::functor::identity::{Identity, IdentityInstance};
+use crate::control::structure::functor::Functor;
+use crate::control::structure::functor::identity::{Identity, IdentityInstance};
 
 impl Functor for IdentityInstance {
     fn fmap<A, B, G>(g: G, x: Self::Type<A>) -> Self::Type<B>

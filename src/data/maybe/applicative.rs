@@ -1,6 +1,6 @@
 use crate::base::function::ConcurrentFn;
 use crate::base::value::Value;
-use crate::control::applicative::Applicative;
+use crate::control::context::applicative::Applicative;
 use crate::data::maybe::{Maybe, MaybeInstance};
 
 impl Applicative for MaybeInstance {

@@ -1,4 +1,4 @@
-use crate::control::semigroup::Semigroup;
+use crate::control::structure::semigroup::Semigroup;
 use crate::data::list::List;
 
 impl<T> Semigroup for List<T>

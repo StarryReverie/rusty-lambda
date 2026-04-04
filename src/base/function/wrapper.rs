@@ -1,24 +1,8 @@
 use std::ops::Deref;
 use std::sync::Arc;
 
-use crate::base::value::{Concurrent, StaticConcurrent, Value};
-
-pub trait ConcurrentFn<T>: Concurrent {
-    type Output;
-
-    fn call(&self, argument: T) -> Self::Output;
-}
-
-impl<T, R, F> ConcurrentFn<T> for F
-where
-    F: Fn(T) -> R + Concurrent,
-{
-    type Output = R;
-
-    fn call(&self, argument: T) -> Self::Output {
-        self(argument)
-    }
-}
+use crate::base::function::ConcurrentFn;
+use crate::base::value::{StaticConcurrent, Value};
 
 pub struct WrappedFn<T, R>(Arc<dyn Fn(T) -> R + Send + Sync + 'static>);
 

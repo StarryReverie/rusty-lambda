@@ -1,5 +1,5 @@
 use crate::base::hkt::TypeConstructor1;
-use crate::base::value::Concurrent;
+use crate::base::value::{Concurrent, Value};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 pub enum Maybe<T> {
@@ -13,6 +13,36 @@ impl<T> Maybe<T> {
         match self {
             Self::Just(x) => Some(x),
             Self::Nothing => None,
+        }
+    }
+}
+
+impl<T> Value for Maybe<T>
+where
+    T: Value<Unwrapped: Sized>,
+{
+    type Unwrapped = Maybe<T::Unwrapped>;
+
+    type View<'a>
+        = Maybe<T::View<'a>>
+    where
+        Self: 'a;
+
+    fn make<U>(unwrapped: U) -> Self
+    where
+        U: Into<Self::Unwrapped>,
+        Self::Unwrapped: Sized,
+    {
+        match unwrapped.into() {
+            Maybe::Just(unwrapped) => Self::Just(Value::make(unwrapped)),
+            Maybe::Nothing => Self::Nothing,
+        }
+    }
+
+    fn view(&self) -> Self::View<'_> {
+        match self {
+            Self::Just(x) => Maybe::Just(x.view()),
+            Self::Nothing => Maybe::Nothing,
         }
     }
 }

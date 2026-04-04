@@ -29,3 +29,75 @@ where
         self
     }
 }
+
+impl<T1> SimpleValue for (T1,) where T1: Value {}
+
+impl<T1, T2> SimpleValue for (T1, T2)
+where
+    T1: Value,
+    T2: Value,
+{
+}
+
+impl<T1, T2, T3> SimpleValue for (T1, T2, T3)
+where
+    T1: Value,
+    T2: Value,
+    T3: Value,
+{
+}
+
+impl<T1, T2, T3, T4> SimpleValue for (T1, T2, T3, T4)
+where
+    T1: Value,
+    T2: Value,
+    T3: Value,
+    T4: Value,
+{
+}
+
+impl<T1, T2, T3, T4, T5> SimpleValue for (T1, T2, T3, T4, T5)
+where
+    T1: Value,
+    T2: Value,
+    T3: Value,
+    T4: Value,
+    T5: Value,
+{
+}
+
+impl<T1, T2, T3, T4, T5, T6> SimpleValue for (T1, T2, T3, T4, T5, T6)
+where
+    T1: Value,
+    T2: Value,
+    T3: Value,
+    T4: Value,
+    T5: Value,
+    T6: Value,
+{
+}
+
+impl<T1, T2, T3, T4, T5, T6, T7> SimpleValue for (T1, T2, T3, T4, T5, T6, T7)
+where
+    T1: Value,
+    T2: Value,
+    T3: Value,
+    T4: Value,
+    T5: Value,
+    T6: Value,
+    T7: Value,
+{
+}
+
+impl<T1, T2, T3, T4, T5, T6, T7, T8> SimpleValue for (T1, T2, T3, T4, T5, T6, T7, T8)
+where
+    T1: Value,
+    T2: Value,
+    T3: Value,
+    T4: Value,
+    T5: Value,
+    T6: Value,
+    T7: Value,
+    T8: Value,
+{
+}

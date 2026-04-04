@@ -9,4 +9,4 @@ pub use currying::{
 };
 pub use interface::ConcurrentFn;
 pub use util::{compose, constv, curry, flip, id, on, uncurry};
-pub use wrapper::WrappedFn;
+pub use wrapper::{WrappedFn, WrappedFnInstance};

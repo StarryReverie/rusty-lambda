@@ -24,20 +24,10 @@ impl<T, R> ConcurrentFn<T> for WrappedFn<T, R> {
 }
 
 impl<T, R> Value for WrappedFn<T, R> {
-    type Unwrapped = Self;
-
     type View<'a>
         = &'a <Self as Deref>::Target
     where
         Self: 'a;
-
-    fn make<U>(unwrapped: U) -> Self
-    where
-        U: Into<Self::Unwrapped>,
-        Self::Unwrapped: Sized,
-    {
-        unwrapped.into()
-    }
 
     fn view(&self) -> Self::View<'_> {
         &**self

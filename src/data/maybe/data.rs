@@ -19,25 +19,12 @@ impl<T> Maybe<T> {
 
 impl<T> Value for Maybe<T>
 where
-    T: Value<Unwrapped: Sized>,
+    T: Value,
 {
-    type Unwrapped = Maybe<T::Unwrapped>;
-
     type View<'a>
         = Maybe<T::View<'a>>
     where
         Self: 'a;
-
-    fn make<U>(unwrapped: U) -> Self
-    where
-        U: Into<Self::Unwrapped>,
-        Self::Unwrapped: Sized,
-    {
-        match unwrapped.into() {
-            Maybe::Just(unwrapped) => Self::Just(Value::make(unwrapped)),
-            Maybe::Nothing => Self::Nothing,
-        }
-    }
 
     fn view(&self) -> Self::View<'_> {
         match self {

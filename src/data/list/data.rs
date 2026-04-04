@@ -90,20 +90,10 @@ impl<T> Value for List<T>
 where
     T: Value,
 {
-    type Unwrapped = Self;
-
     type View<'a>
         = &'a Self
     where
         Self: 'a;
-
-    fn make<U>(unwrapped: U) -> Self
-    where
-        U: Into<Self::Unwrapped>,
-        Self::Unwrapped: Sized,
-    {
-        unwrapped.into()
-    }
 
     fn view(&self) -> Self::View<'_> {
         self

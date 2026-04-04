@@ -4,20 +4,10 @@ impl<T> Value for T
 where
     T: Primitive + Concurrent,
 {
-    type Unwrapped = T;
-
     type View<'a>
         = T
     where
         Self: 'a;
-
-    fn make<U>(unwrapped: U) -> Self
-    where
-        U: Into<Self::Unwrapped>,
-        Self::Unwrapped: Sized,
-    {
-        unwrapped.into()
-    }
 
     fn view(&self) -> Self::View<'_> {
         *self

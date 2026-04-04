@@ -31,7 +31,7 @@ impl Applicative for ListInstance {
 
 #[cfg(test)]
 mod tests {
-    use crate::base::function::{compose, Curry, WrappedFn};
+    use crate::base::function::{Curry, WrappedFn, compose};
     use crate::base::value::arc;
 
     use super::*;

@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use crate::base::hkt::TypeConstructor1;
-use crate::base::value::{Concurrent, Value};
+use crate::base::value::{Concurrent, SimpleValue, Value};
 use crate::data::maybe::Maybe;
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
@@ -86,19 +86,7 @@ where
     }
 }
 
-impl<T> Value for List<T>
-where
-    T: Value,
-{
-    type View<'a>
-        = &'a Self
-    where
-        Self: 'a;
-
-    fn view(&self) -> Self::View<'_> {
-        self
-    }
-}
+impl<T> SimpleValue for List<T> where T: Value {}
 
 impl<T> FromIterator<T> for List<T> {
     fn from_iter<I>(iter: I) -> Self

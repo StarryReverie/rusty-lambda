@@ -1,5 +1,5 @@
 use crate::base::hkt::TypeConstructor1;
-use crate::base::value::{Concurrent, Value};
+use crate::base::value::{Concurrent, SimpleValue, Value};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 pub enum Maybe<T> {
@@ -17,22 +17,7 @@ impl<T> Maybe<T> {
     }
 }
 
-impl<T> Value for Maybe<T>
-where
-    T: Value,
-{
-    type View<'a>
-        = Maybe<T::View<'a>>
-    where
-        Self: 'a;
-
-    fn view(&self) -> Self::View<'_> {
-        match self {
-            Self::Just(x) => Maybe::Just(x.view()),
-            Self::Nothing => Maybe::Nothing,
-        }
-    }
-}
+impl<T> SimpleValue for Maybe<T> where T: Value {}
 
 impl<T, U> From<Option<U>> for Maybe<T>
 where

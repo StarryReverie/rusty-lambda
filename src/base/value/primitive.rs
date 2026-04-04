@@ -1,18 +1,6 @@
-use crate::base::value::{Concurrent, Value};
+use crate::base::value::{Concurrent, SimpleValue};
 
-impl<T> Value for T
-where
-    T: Primitive + Concurrent,
-{
-    type View<'a>
-        = T
-    where
-        Self: 'a;
-
-    fn view(&self) -> Self::View<'_> {
-        *self
-    }
-}
+impl<T> SimpleValue for T where T: Primitive + Concurrent {}
 
 trait Primitive: Copy {}
 

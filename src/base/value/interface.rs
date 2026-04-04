@@ -13,3 +13,19 @@ pub trait Value: Concurrent + Clone {
 
     fn view(&self) -> Self::View<'_>;
 }
+
+pub trait SimpleValue: Concurrent + Clone {}
+
+impl<T> Value for T
+where
+    T: SimpleValue,
+{
+    type View<'a>
+        = &'a Self
+    where
+        Self: 'a;
+
+    fn view(&self) -> Self::View<'_> {
+        self
+    }
+}

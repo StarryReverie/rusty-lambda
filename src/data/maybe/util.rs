@@ -1,3 +1,4 @@
+use crate::base::function::ConcurrentFn;
 use crate::base::value::Value;
 use crate::control::functor::Functor;
 use crate::data::maybe::{Maybe, MaybeInstance};
@@ -6,7 +7,7 @@ pub fn maybe<A, B, G>(default: B, g: G, x: Maybe<A>) -> B
 where
     A: Value,
     B: Value,
-    G: for<'a> Value<View<'a>: Fn(A) -> B>,
+    G: for<'a> Value<View<'a>: ConcurrentFn<A, Output = B>>,
 {
     let y = MaybeInstance::fmap(g, x);
     from_maybe(default, y)

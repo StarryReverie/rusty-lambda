@@ -1,3 +1,4 @@
+use crate::base::function::ConcurrentFn;
 use crate::base::value::Value;
 use crate::control::functor::Functor;
 use crate::data::maybe::{Maybe, MaybeInstance};
@@ -7,10 +8,10 @@ impl Functor for MaybeInstance {
     where
         A: Value,
         B: Value,
-        G: for<'a> Value<View<'a>: Fn(A) -> B>,
+        G: for<'a> Value<View<'a>: ConcurrentFn<A, Output = B>>,
     {
         match x {
-            Maybe::Just(x) => Maybe::Just((g.view())(x)),
+            Maybe::Just(x) => Maybe::Just(g.view().call(x)),
             Maybe::Nothing => Maybe::Nothing,
         }
     }
@@ -65,16 +66,16 @@ mod tests {
     fn test_functor_composition_law() {
         let h = |x| (x as i64) * 2;
         let g = |x| x + 3;
-        let composed = move |x| g(h(x));
+        let composed = g.compose(h);
 
         let f = Maybe::Just(4i32);
-        let lhs = MaybeInstance::fmap(arc(composed), f);
+        let lhs = MaybeInstance::fmap(composed.clone(), f);
         let rhs = MaybeInstance::fmap(arc(g), MaybeInstance::fmap(arc(h), Maybe::Just(4i32)));
         assert_eq!(lhs, Maybe::Just(11i64));
         assert_eq!(lhs, rhs);
 
         let f: Maybe<i32> = Maybe::Nothing;
-        let lhs = MaybeInstance::fmap(arc(composed), f);
+        let lhs = MaybeInstance::fmap(composed, f);
         let rhs = MaybeInstance::fmap(arc(g), MaybeInstance::fmap(arc(h), Maybe::Nothing));
         assert_eq!(lhs, Maybe::Nothing);
         assert_eq!(lhs, rhs);

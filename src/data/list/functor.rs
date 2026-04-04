@@ -1,3 +1,4 @@
+use crate::base::function::ConcurrentFn;
 use crate::base::value::Value;
 use crate::control::functor::Functor;
 use crate::data::list::{List, ListInstance};
@@ -8,11 +9,11 @@ impl Functor for ListInstance {
     where
         A: Value,
         B: Value,
-        G: for<'a> Value<View<'a>: Fn(A) -> B>,
+        G: for<'a> Value<View<'a>: ConcurrentFn<A, Output = B>>,
     {
         match xs.decompose() {
             Maybe::Just((x, xs)) => {
-                let y = (g.view())(x);
+                let y = g.view().call(x);
                 List::cons(y, Self::fmap(g, xs))
             }
             Maybe::Nothing => List::empty(),
@@ -22,6 +23,7 @@ impl Functor for ListInstance {
 
 #[cfg(test)]
 mod tests {
+    use crate::base::function::{ConcurrentFn, WrappedFn};
     use crate::base::value::arc;
 
     use super::*;
@@ -51,18 +53,18 @@ mod tests {
 
     #[test]
     fn test_functor_composition_law() {
-        let h = |x| (x as i64) * 2;
-        let g = |x| x + 3;
-        let composed = move |x| g(h(x));
+        let h = WrappedFn::from(|x| (x as i64) * 2);
+        let g = WrappedFn::from(|x| x + 3);
+        let composed = (g.clone()).compose(h.clone());
 
         let xs = List::cons(1, List::cons(2, List::empty()));
-        let lhs = ListInstance::fmap(arc(composed), xs.clone());
-        let rhs = ListInstance::fmap(arc(g), ListInstance::fmap(arc(h), xs));
+        let lhs = ListInstance::fmap(composed.clone(), xs.clone());
+        let rhs = ListInstance::fmap(g.clone(), ListInstance::fmap(h.clone(), xs));
         assert_eq!(lhs, rhs);
 
         let xs: List<i32> = List::empty();
-        let lhs = ListInstance::fmap(arc(composed), xs.clone());
-        let rhs = ListInstance::fmap(arc(g), ListInstance::fmap(arc(h), xs));
+        let lhs = ListInstance::fmap(composed, xs.clone());
+        let rhs = ListInstance::fmap(g, ListInstance::fmap(h, xs));
         assert_eq!(lhs, rhs);
     }
 }

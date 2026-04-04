@@ -1,3 +1,4 @@
+use crate::base::function::ConcurrentFn;
 use crate::base::value::{Concurrent, Value};
 use crate::control::functor::Functor;
 
@@ -10,7 +11,7 @@ pub trait Applicative: Functor {
     where
         A: Value,
         B: Value,
-        G: for<'a> Value<View<'a>: Fn(A) -> B>;
+        G: for<'a> Value<View<'a>: ConcurrentFn<A, Output = B>>;
 
     fn achain<A>(x: Self::Type<A>) -> ApplicativeChain<Self, A>
     where
@@ -61,7 +62,7 @@ where
     where
         A: Value,
         B: Value,
-        G: for<'a> Value<View<'a>: Fn(A) -> B>,
+        G: for<'a> Value<View<'a>: ConcurrentFn<A, Output = B>>,
     {
         ApplicativeChain::new(I::apply(self.value, x))
     }

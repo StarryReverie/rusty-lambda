@@ -1,3 +1,4 @@
+use crate::base::function::ConcurrentFn;
 use crate::base::value::Value;
 use crate::control::applicative::Applicative;
 use crate::data::maybe::{Maybe, MaybeInstance};
@@ -14,10 +15,10 @@ impl Applicative for MaybeInstance {
     where
         A: Value,
         B: Value,
-        G: for<'a> Value<View<'a>: Fn(A) -> B>,
+        G: for<'a> Value<View<'a>: ConcurrentFn<A, Output = B>>,
     {
         match (g, x) {
-            (Maybe::Just(g), Maybe::Just(x)) => Maybe::Just((g.view())(x)),
+            (Maybe::Just(g), Maybe::Just(x)) => Maybe::Just(g.view().call(x)),
             _ => Maybe::Nothing,
         }
     }
@@ -97,9 +98,9 @@ mod tests {
     fn test_applicative_composition_law() {
         let g = |x| x * 2;
         let h = |x| x + 3;
-        let composed = move |x| g(h(x));
+        let composed = g.compose(h);
 
-        let lhs = MaybeInstance::apply(Maybe::Just(arc(composed)), Maybe::Just(4));
+        let lhs = MaybeInstance::apply(Maybe::Just(composed.clone()), Maybe::Just(4));
         let rhs = MaybeInstance::apply(
             Maybe::Just(arc(g)),
             MaybeInstance::apply(Maybe::Just(arc(h)), Maybe::Just(4)),

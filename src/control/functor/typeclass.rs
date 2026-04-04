@@ -1,3 +1,4 @@
+use crate::base::function::ConcurrentFn;
 use crate::base::hkt::TypeConstructor1;
 use crate::base::value::Value;
 
@@ -6,5 +7,5 @@ pub trait Functor: TypeConstructor1 {
     where
         A: Value,
         B: Value,
-        G: for<'a> Value<View<'a>: Fn(A) -> B>;
+        G: for<'a> Value<View<'a>: ConcurrentFn<A, Output = B>>;
 }

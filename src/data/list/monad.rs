@@ -1,3 +1,4 @@
+use crate::base::function::ConcurrentFn;
 use crate::base::value::Value;
 use crate::control::monad::Monad;
 use crate::data::list::{List, ListInstance};
@@ -8,11 +9,11 @@ impl Monad for ListInstance {
     where
         A: Value,
         B: Value,
-        G: for<'a> Value<View<'a>: Fn(A) -> Self::Type<B>>,
+        G: for<'a> Value<View<'a>: ConcurrentFn<A, Output = Self::Type<B>>>,
     {
         match xs.decompose() {
             Maybe::Just((x, xs)) => {
-                let ys = (g.view())(x);
+                let ys = g.view().call(x);
                 ys.append(Self::bind(xs, g))
             }
             Maybe::Nothing => List::empty(),

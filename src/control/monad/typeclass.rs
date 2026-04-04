@@ -1,3 +1,4 @@
+use crate::base::function::ConcurrentFn;
 use crate::base::value::{Concurrent, Value};
 use crate::control::applicative::Applicative;
 
@@ -13,7 +14,7 @@ pub trait Monad: Applicative {
     where
         A: Value,
         B: Value,
-        G: for<'a> Value<View<'a>: Fn(A) -> Self::Type<B>>;
+        G: for<'a> Value<View<'a>: ConcurrentFn<A, Output = Self::Type<B>>>;
 
     fn mchain<A>(x: Self::Type<A>) -> MonadChain<Self, A>
     where
@@ -63,7 +64,7 @@ where
     pub fn bind<B, G>(self, g: G) -> MonadChain<I, B>
     where
         B: Value,
-        G: for<'a> Value<View<'a>: Fn(A) -> I::Type<B>>,
+        G: for<'a> Value<View<'a>: ConcurrentFn<A, Output = I::Type<B>>>,
     {
         MonadChain::new(I::bind(self.value, g))
     }

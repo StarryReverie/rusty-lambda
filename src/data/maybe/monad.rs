@@ -1,3 +1,4 @@
+use crate::base::function::ConcurrentFn;
 use crate::base::value::Value;
 use crate::control::monad::Monad;
 use crate::data::maybe::{Maybe, MaybeInstance};
@@ -7,10 +8,10 @@ impl Monad for MaybeInstance {
     where
         A: Value,
         B: Value,
-        G: for<'a> Value<View<'a>: Fn(A) -> Self::Type<B>>,
+        G: for<'a> Value<View<'a>: ConcurrentFn<A, Output = Self::Type<B>>>,
     {
         match x {
-            Maybe::Just(x) => (g.view())(x),
+            Maybe::Just(x) => g.view().call(x),
             Maybe::Nothing => Maybe::Nothing,
         }
     }

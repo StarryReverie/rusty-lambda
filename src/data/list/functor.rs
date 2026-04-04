@@ -34,9 +34,9 @@ mod tests {
         let ys = ListInstance::fmap(&|x| x + 1, xs);
         assert_eq!(ys, List::empty());
 
-        let xs = List::cons(1, List::cons(2, List::cons(3, List::empty())));
+        let xs = List::from(vec![1, 2, 3]);
         let ys = ListInstance::fmap(&|x| x + 1, xs);
-        let expected = List::cons(2, List::cons(3, List::cons(4, List::empty())));
+        let expected = List::from(vec![2, 3, 4]);
         assert_eq!(ys, expected);
     }
 
@@ -44,7 +44,7 @@ mod tests {
     fn test_functor_identity_law() {
         let id = |x| x;
 
-        let xs = List::cons(1, List::cons(2, List::cons(3, List::empty())));
+        let xs = List::from(vec![1, 2, 3]);
         assert_eq!(ListInstance::fmap(arc(id), xs.clone()), xs);
 
         let xs: List<i32> = List::empty();
@@ -57,7 +57,7 @@ mod tests {
         let g = WrappedFn::from(|x| x + 3);
         let composed = (g.clone()).compose(h.clone());
 
-        let xs = List::cons(1, List::cons(2, List::empty()));
+        let xs = List::from(vec![1, 2]);
         let lhs = ListInstance::fmap(composed.clone(), xs.clone());
         let rhs = ListInstance::fmap(g.clone(), ListInstance::fmap(h.clone(), xs));
         assert_eq!(lhs, rhs);

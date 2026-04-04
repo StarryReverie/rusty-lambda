@@ -44,7 +44,7 @@ mod tests {
     #[test]
     fn test_apply_nil_gs() {
         let gs: List<fn(i32) -> i32> = List::empty();
-        let xs = List::cons(1, List::cons(2, List::empty()));
+        let xs = List::from(vec![1, 2]);
         assert_eq!(ListInstance::apply(gs, xs), List::empty());
     }
 
@@ -59,13 +59,10 @@ mod tests {
     fn test_apply_cartesian() {
         let add1: fn(i32) -> i32 = |x| x + 1;
         let mul2: fn(i32) -> i32 = |x| x * 2;
-        let gs = List::cons(add1, List::cons(mul2, List::empty()));
-        let xs = List::cons(1, List::cons(2, List::empty()));
+        let gs = List::from(vec![add1, mul2]);
+        let xs = List::from(vec![1, 2]);
         let result = ListInstance::apply(gs, xs);
-        let expected = List::cons(
-            2,
-            List::cons(3, List::cons(2, List::cons(4, List::empty()))),
-        );
+        let expected = List::from(vec![2, 3, 2, 4]);
         assert_eq!(result, expected);
     }
 
@@ -74,7 +71,7 @@ mod tests {
         let id = |x| x;
         let gs = List::singleton(arc(id));
 
-        let xs = List::cons(1, List::cons(2, List::cons(3, List::empty())));
+        let xs = List::from(vec![1, 2, 3]);
         assert_eq!(ListInstance::apply(gs.clone(), xs.clone()), xs);
 
         let xs: List<i32> = List::empty();
@@ -96,7 +93,7 @@ mod tests {
         let mul2: fn(i32) -> i32 = |x| x * 2;
         let x = 5;
 
-        let gs = List::cons(add10, List::cons(mul2, List::empty()));
+        let gs = List::from(vec![add10, mul2]);
         let lhs = ListInstance::apply(gs.clone(), ListInstance::pure(x));
         let rhs = ListInstance::apply(ListInstance::pure(arc(move |g: fn(i32) -> i32| g(x))), gs);
         assert_eq!(lhs, rhs);
@@ -113,9 +110,9 @@ mod tests {
         let mul2 = WrappedFn::from(|x| x * 2);
         let inc = WrappedFn::from(|x| x + 1);
 
-        let xs = List::cons(1, List::cons(2, List::empty()));
-        let gs = List::cons(add3, List::cons(mul2.clone(), List::empty()));
-        let hs = List::cons(inc, List::cons(mul2, List::empty()));
+        let xs = List::from(vec![1, 2]);
+        let gs = List::from(vec![add3, mul2.clone()]);
+        let hs = List::from(vec![inc, mul2]);
 
         let composed = ListInstance::apure(WrappedFn::curry(compose))
             .apply(gs.clone())

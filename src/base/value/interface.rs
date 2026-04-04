@@ -6,7 +6,7 @@ pub trait StaticConcurrent: Concurrent + 'static {}
 
 impl<T> StaticConcurrent for T where T: Concurrent + ?Sized + 'static {}
 
-pub trait Value: Concurrent + Clone {
+pub trait Value: StaticConcurrent + Clone {
     type View<'a>: Concurrent + 'a
     where
         Self: 'a;
@@ -14,7 +14,7 @@ pub trait Value: Concurrent + Clone {
     fn view(&self) -> Self::View<'_>;
 }
 
-pub trait SimpleValue: Concurrent + Clone {}
+pub trait SimpleValue: StaticConcurrent + Clone {}
 
 impl<T> Value for T
 where

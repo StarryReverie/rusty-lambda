@@ -2,7 +2,7 @@ use std::ops::Deref;
 use std::sync::Arc;
 
 use crate::base::function::ConcurrentFn;
-use crate::base::value::{StaticConcurrent, Value};
+use crate::base::value::{Concurrent, StaticConcurrent, Value};
 
 pub struct WrappedFn<T, R>(Arc<dyn Fn(T) -> R + Send + Sync + 'static>);
 
@@ -23,7 +23,11 @@ impl<T, R> ConcurrentFn<T> for WrappedFn<T, R> {
     }
 }
 
-impl<T, R> Value for WrappedFn<T, R> {
+impl<T, R> Value for WrappedFn<T, R>
+where
+    T: Value,
+    R: Value,
+{
     type View<'a>
         = &'a <Self as Deref>::Target
     where

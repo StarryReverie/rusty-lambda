@@ -1,6 +1,6 @@
-use crate::base::value::{Concurrent, SimpleValue};
+use crate::base::value::{SimpleValue, StaticConcurrent};
 
-impl<T> SimpleValue for T where T: Primitive + Concurrent {}
+impl<T> SimpleValue for T where T: Primitive + StaticConcurrent {}
 
 trait Primitive: Copy {}
 

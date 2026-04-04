@@ -19,9 +19,9 @@ where
 
 pub fn flip<A, B, C, F>(f: F) -> Curryed2Fn<B, A, C>
 where
-    A: Value + 'static,
-    B: Value + 'static,
-    C: Value + 'static,
+    A: Value,
+    B: Value,
+    C: Value,
     F: Into<Curryed2Fn<A, B, C>>,
 {
     let f = f.into();
@@ -30,16 +30,16 @@ where
 
 pub fn constv<A, B>(x: A) -> WrappedFn<B, A>
 where
-    A: Value + 'static,
+    A: Value,
 {
     WrappedFn::from(move |_| x.clone())
 }
 
 pub fn on<A, B, C, F, G>(f: F, g: G) -> Curryed2Fn<A, A, C>
 where
-    A: Value + 'static,
-    B: Value + 'static,
-    C: Value + 'static,
+    A: Value,
+    B: Value,
+    C: Value,
     F: Into<Curryed2Fn<B, B, C>>,
     G: Into<WrappedFn<A, B>>,
 {
@@ -49,9 +49,9 @@ where
 
 pub fn curry<A, B, C, F>(f: F) -> Curryed2Fn<A, B, C>
 where
-    A: Value + 'static,
-    B: Value + 'static,
-    C: Value + 'static,
+    A: Value,
+    B: Value,
+    C: Value,
     F: Into<WrappedFn<(A, B), C>>,
 {
     let f = f.into();
@@ -60,9 +60,9 @@ where
 
 pub fn uncurry<A, B, C, F>(f: F) -> WrappedFn<(A, B), C>
 where
-    A: Value + 'static,
-    B: Value + 'static,
-    C: Value + 'static,
+    A: Value,
+    B: Value,
+    C: Value,
     F: Into<Curryed2Fn<A, B, C>>,
 {
     let f = f.into();

@@ -2,6 +2,8 @@ mod applicative;
 mod data;
 mod functor;
 mod monad;
+mod monoid;
+mod semigroup;
 mod util;
 
 pub use data::{Maybe, MaybeInstance};

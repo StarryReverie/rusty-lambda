@@ -1,5 +1,6 @@
 mod applicative;
 mod data;
+mod foldable;
 mod functor;
 mod monad;
 mod monoid;

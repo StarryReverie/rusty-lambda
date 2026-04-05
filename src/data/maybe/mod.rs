@@ -5,6 +5,7 @@ mod functor;
 mod monad;
 mod monoid;
 mod semigroup;
+mod traversable;
 mod util;
 
 pub use data::{Maybe, MaybeInstance};

@@ -21,3 +21,7 @@ impl TypeConstructor1 for FirstInstance {
     where
         A1: Concurrent;
 }
+
+crate::derive_functor_for_wrapper!(FirstInstance, First);
+crate::derive_applicative_for_wrapper!(FirstInstance, First);
+crate::derive_monad_for_wrapper!(FirstInstance);

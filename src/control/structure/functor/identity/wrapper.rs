@@ -21,3 +21,7 @@ impl TypeConstructor1 for IdentityInstance {
     where
         A1: Concurrent;
 }
+
+crate::derive_functor_for_wrapper!(IdentityInstance, Identity);
+crate::derive_applicative_for_wrapper!(IdentityInstance, Identity);
+crate::derive_monad_for_wrapper!(IdentityInstance);

@@ -87,3 +87,31 @@ where
         T::traverse(self.applicative_tag, self.map, container)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::data::list::{List, ListInstance};
+    use crate::data::maybe::{Maybe, MaybeInstance};
+
+    use super::*;
+
+    #[test]
+    fn test_sequence() {
+        let res = ListInstance::context(MaybeInstance).sequence(List::from(vec![
+            Maybe::Just(1),
+            Maybe::Just(2),
+            Maybe::Just(3),
+        ]));
+        assert_eq!(res, Maybe::Just(List::from(vec![1, 2, 3])));
+
+        let res = ListInstance::context(MaybeInstance).sequence(List::from(vec![
+            Maybe::Just(1),
+            Maybe::Nothing,
+            Maybe::Just(3),
+        ]));
+        assert_eq!(res, Maybe::Nothing);
+
+        let res: Maybe<List<i32>> = ListInstance::context(MaybeInstance).sequence(List::empty());
+        assert_eq!(res, Maybe::Just(List::empty()));
+    }
+}

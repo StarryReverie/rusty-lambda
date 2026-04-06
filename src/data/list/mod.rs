@@ -1,3 +1,4 @@
+mod alternative;
 mod applicative;
 mod data;
 mod foldable;

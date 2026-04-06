@@ -1,6 +1,6 @@
 use crate::base::function::{ConcurrentFn, WrappedFn};
-use crate::base::value::Value;
-use crate::control::context::applicative::Applicative;
+use crate::base::value::{StaticConcurrent, Value};
+use crate::control::context::applicative::{Applicative, ApplicativeExt};
 use crate::control::context::monad::state::{State, StateInstance};
 
 impl<S> Applicative for StateInstance<S>
@@ -26,6 +26,15 @@ where
             (g.view().call(x), s)
         }))
     }
+}
+
+impl<S, A> ApplicativeExt for State<S, A>
+where
+    S: Value,
+    A: StaticConcurrent,
+{
+    type Wrapped = A;
+    type Instance = StateInstance<S>;
 }
 
 #[cfg(test)]

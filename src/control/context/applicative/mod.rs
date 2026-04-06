@@ -1,4 +1,4 @@
 mod derive;
 mod typeclass;
 
-pub use typeclass::Applicative;
+pub use typeclass::{Applicative, ApplicativeExt};

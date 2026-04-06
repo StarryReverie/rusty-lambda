@@ -1,6 +1,6 @@
 use crate::base::function::ConcurrentFn;
-use crate::base::value::Value;
-use crate::control::context::applicative::Applicative;
+use crate::base::value::{StaticConcurrent, Value};
+use crate::control::context::applicative::{Applicative, ApplicativeExt};
 use crate::control::structure::functor::Functor;
 use crate::data::list::{List, ListInstance};
 use crate::data::maybe::Maybe;
@@ -27,6 +27,14 @@ impl Applicative for ListInstance {
             Maybe::Nothing => List::empty(),
         }
     }
+}
+
+impl<T> ApplicativeExt for List<T>
+where
+    T: StaticConcurrent,
+{
+    type Wrapped = T;
+    type Instance = ListInstance;
 }
 
 #[cfg(test)]

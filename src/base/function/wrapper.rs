@@ -5,7 +5,7 @@ use std::sync::Arc;
 use crate::base::function::{ConcurrentFn, constv};
 use crate::base::hkt::TypeConstructor1;
 use crate::base::value::{Concurrent, StaticConcurrent, Value};
-use crate::control::context::applicative::Applicative;
+use crate::control::context::applicative::{Applicative, ApplicativeExt};
 use crate::control::context::monad::Monad;
 use crate::control::structure::functor::Functor;
 
@@ -122,6 +122,15 @@ where
             g(e)
         })
     }
+}
+
+impl<E, A> ApplicativeExt for WrappedFn<E, A>
+where
+    E: Value,
+    A: StaticConcurrent,
+{
+    type Wrapped = A;
+    type Instance = WrappedFnInstance<E>;
 }
 
 #[cfg(test)]

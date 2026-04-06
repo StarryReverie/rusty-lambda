@@ -1,4 +1,5 @@
 use crate::base::function::ConcurrentFn;
+use crate::base::hkt::TypeConstructor1;
 use crate::base::value::{Concurrent, Value};
 use crate::control::structure::functor::Functor;
 
@@ -65,5 +66,23 @@ where
         G: for<'a> Value<View<'a>: ConcurrentFn<A, Output = B>>,
     {
         ApplicativeChain::new(I::apply(self.value, x))
+    }
+}
+
+pub trait ApplicativeExt {
+    type Wrapped: Concurrent;
+    type Instance: Applicative<Type<Self::Wrapped> = Self>;
+
+    fn apply<A, B>(
+        self,
+        x: <Self::Instance as TypeConstructor1>::Type<A>,
+    ) -> <Self::Instance as TypeConstructor1>::Type<B>
+    where
+        A: Value,
+        B: Value,
+        Self: Sized,
+        Self::Wrapped: for<'a> Value<View<'a>: ConcurrentFn<A, Output = B>>,
+    {
+        Self::Instance::apply::<A, B, Self::Wrapped>(self, x)
     }
 }

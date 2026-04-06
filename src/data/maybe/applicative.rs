@@ -1,6 +1,6 @@
 use crate::base::function::ConcurrentFn;
-use crate::base::value::Value;
-use crate::control::context::applicative::Applicative;
+use crate::base::value::{StaticConcurrent, Value};
+use crate::control::context::applicative::{Applicative, ApplicativeExt};
 use crate::data::maybe::{Maybe, MaybeInstance};
 
 impl Applicative for MaybeInstance {
@@ -24,9 +24,17 @@ impl Applicative for MaybeInstance {
     }
 }
 
+impl<T> ApplicativeExt for Maybe<T>
+where
+    T: StaticConcurrent,
+{
+    type Wrapped = T;
+    type Instance = MaybeInstance;
+}
+
 #[cfg(test)]
 mod tests {
-    use crate::base::function::{Curry, WrappedFn};
+    use crate::base::function::WrappedFn;
     use crate::base::value::arc;
 
     use super::*;
@@ -38,13 +46,13 @@ mod tests {
 
     #[test]
     fn test_apply() {
-        let f = MaybeInstance::apply(Maybe::Just(&|x: i32| x + 1), Maybe::Just(1));
+        let f = Maybe::Just(&|x| x + 1).apply(Maybe::Just(1));
         assert_eq!(f, Maybe::Just(2));
 
-        let f: Maybe<i32> = MaybeInstance::apply(Maybe::Nothing::<fn(i32) -> i32>, Maybe::Just(1));
+        let f = Maybe::Nothing::<WrappedFn<i32, i32>>.apply(Maybe::Just(1));
         assert_eq!(f, Maybe::Nothing);
 
-        let f: Maybe<i32> = MaybeInstance::apply(Maybe::Just(&|x: i32| x + 1), Maybe::Nothing);
+        let f = Maybe::Just(&|x: i32| x + 1).apply(Maybe::Nothing);
         assert_eq!(f, Maybe::Nothing);
     }
 
@@ -53,23 +61,17 @@ mod tests {
         let id = |x| x;
 
         let f = Maybe::Just(42);
-        assert_eq!(
-            MaybeInstance::apply(Maybe::Just(arc(id)), f),
-            Maybe::Just(42),
-        );
+        assert_eq!(Maybe::Just(arc(id)).apply(f), Maybe::Just(42),);
 
         let f: Maybe<i32> = Maybe::Nothing;
-        assert_eq!(
-            MaybeInstance::apply(Maybe::Just(arc(id)), f),
-            Maybe::Nothing,
-        );
+        assert_eq!(Maybe::Just(arc(id)).apply(f), Maybe::Nothing,);
     }
 
     #[test]
     fn test_applicative_homomorphism_law() {
         let h = |x| x * 2;
         assert_eq!(
-            MaybeInstance::apply(MaybeInstance::pure(arc(h)), MaybeInstance::pure(3)),
+            MaybeInstance::pure(arc(h)).apply(MaybeInstance::pure(3)),
             MaybeInstance::pure(h(3))
         );
     }
@@ -79,18 +81,13 @@ mod tests {
         let h = |x| x + 10;
         let x = 5;
 
-        let lhs = MaybeInstance::apply(Maybe::Just(arc(h)), MaybeInstance::pure(x));
-        let rhs = MaybeInstance::apply(
-            MaybeInstance::pure(arc(move |g: fn(i32) -> i32| g(x))),
-            Maybe::Just(h),
-        );
+        let lhs = Maybe::Just(arc(h)).apply(MaybeInstance::pure(x));
+        let rhs = MaybeInstance::pure(arc(move |g: fn(i32) -> i32| g(x))).apply(Maybe::Just(h));
         assert_eq!(lhs, rhs);
 
-        let lhs = MaybeInstance::apply(Maybe::<fn(i32) -> i32>::Nothing, MaybeInstance::pure(x));
-        let rhs = MaybeInstance::apply(
-            MaybeInstance::pure(arc(move |g: fn(i32) -> i32| g(x))),
-            Maybe::<fn(i32) -> i32>::Nothing,
-        );
+        let lhs = Maybe::<fn(i32) -> i32>::Nothing.apply(MaybeInstance::pure(x));
+        let rhs = MaybeInstance::pure(arc(move |g: fn(i32) -> i32| g(x)))
+            .apply(Maybe::<fn(i32) -> i32>::Nothing);
         assert_eq!(lhs, rhs);
     }
 
@@ -100,29 +97,9 @@ mod tests {
         let h = |x| x + 3;
         let composed = g.compose(h);
 
-        let lhs = MaybeInstance::apply(Maybe::Just(composed.clone()), Maybe::Just(4));
-        let rhs = MaybeInstance::apply(
-            Maybe::Just(arc(g)),
-            MaybeInstance::apply(Maybe::Just(arc(h)), Maybe::Just(4)),
-        );
+        let lhs = Maybe::Just(composed.clone()).apply(Maybe::Just(4));
+        let rhs = Maybe::Just(arc(g)).apply(Maybe::Just(arc(h)).apply(Maybe::Just(4)));
         assert_eq!(lhs, rhs);
         assert_eq!(lhs, Maybe::Just(14));
-    }
-
-    #[test]
-    fn test_chained_apply() {
-        let add = WrappedFn::curry(|x, y| x + y);
-
-        let f = MaybeInstance::apure(add.clone())
-            .apply(Maybe::Just(1))
-            .apply(Maybe::Just(2))
-            .eval();
-        assert_eq!(f, Maybe::Just(3));
-
-        let f = MaybeInstance::apure(add)
-            .apply(Maybe::Just(1))
-            .apply(Maybe::Nothing)
-            .eval();
-        assert_eq!(f, Maybe::Nothing);
     }
 }

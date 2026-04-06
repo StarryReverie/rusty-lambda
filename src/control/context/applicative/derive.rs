@@ -20,6 +20,14 @@ macro_rules! derive_applicative_for_wrapper {
                 $wrapper($crate::base::function::ConcurrentFn::call(&g.0.view(), x.0))
             }
         }
+
+        impl<T> $crate::control::context::applicative::ApplicativeExt for $wrapper<T>
+        where
+            T: $crate::base::value::StaticConcurrent,
+        {
+            type Wrapped = T;
+            type Instance = $instance;
+        }
     };
 }
 
@@ -52,6 +60,14 @@ macro_rules! derive_applicative_for_nested_applicative {
                     ),
                 )
             }
+        }
+
+        impl<T> $crate::control::context::applicative::ApplicativeExt for $wrapper<T>
+        where
+            T: $crate::base::value::StaticConcurrent,
+        {
+            type Wrapped = T;
+            type Instance = $instance;
         }
     };
 }

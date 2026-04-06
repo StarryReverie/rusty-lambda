@@ -1,4 +1,3 @@
-mod instance;
 mod monoid;
 mod semigroup;
 mod wrapper;

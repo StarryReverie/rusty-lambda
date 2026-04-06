@@ -30,8 +30,8 @@ impl<T, R> ConcurrentFn<T> for WrappedFn<T, R> {
 
 impl<T, R> Value for WrappedFn<T, R>
 where
-    T: Value,
-    R: Value,
+    T: StaticConcurrent,
+    R: StaticConcurrent,
 {
     type View<'a>
         = &'a <Self as Deref>::Target

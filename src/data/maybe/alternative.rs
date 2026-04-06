@@ -39,25 +39,19 @@ mod tests {
 
     #[test]
     fn test_alternative_left_identity_law() {
-        let x = MaybeInstance::fchain(Maybe::Just(1))
-            .alt(MaybeInstance::fallback())
-            .eval();
+        let x = Maybe::Just(1).alt(MaybeInstance::fallback());
         assert_eq!(x, Maybe::Just(1));
 
-        let x: Maybe<i32> = MaybeInstance::ffallback()
-            .alt(MaybeInstance::fallback())
-            .eval();
+        let x: Maybe<i32> = MaybeInstance::fallback().alt(MaybeInstance::fallback());
         assert_eq!(x, Maybe::Nothing);
     }
 
     #[test]
     fn test_alternative_right_identity_law() {
-        let x = MaybeInstance::ffallback::<i32>().alt(Maybe::Just(1)).eval();
+        let x = MaybeInstance::fallback::<i32>().alt(Maybe::Just(1));
         assert_eq!(x, Maybe::Just(1));
 
-        let x: Maybe<i32> = MaybeInstance::ffallback()
-            .alt(MaybeInstance::fallback())
-            .eval();
+        let x: Maybe<i32> = MaybeInstance::fallback().alt(MaybeInstance::fallback());
         assert_eq!(x, Maybe::Nothing);
     }
 
@@ -66,15 +60,15 @@ mod tests {
         let a = Maybe::Just(1);
         let b = Maybe::Just(2);
         let c = Maybe::Just(3);
-        let lhs = MaybeInstance::alt(MaybeInstance::alt(a, b), c);
-        let rhs = MaybeInstance::alt(a, MaybeInstance::alt(b, c));
+        let lhs = a.alt(b).alt(c);
+        let rhs = a.alt(b.alt(c));
         assert_eq!(lhs, rhs);
 
         let a = Maybe::Nothing;
         let b = Maybe::Just(2);
         let c = Maybe::Nothing;
-        let lhs = MaybeInstance::alt(MaybeInstance::alt(a, b), c);
-        let rhs = MaybeInstance::alt(a, MaybeInstance::alt(b, c));
+        let lhs = a.alt(b).alt(c);
+        let rhs = a.alt(b.alt(c));
         assert_eq!(lhs, rhs);
     }
 
@@ -83,15 +77,15 @@ mod tests {
         let f = WrappedFn::from(|x| x * 2);
         let a = Maybe::Just(1);
         let b = Maybe::Just(2);
-        let lhs = MaybeInstance::fmap(f.clone(), MaybeInstance::alt(a.clone(), b.clone()));
-        let rhs = MaybeInstance::alt(MaybeInstance::fmap(f.clone(), a), MaybeInstance::fmap(f, b));
+        let lhs = MaybeInstance::fmap(f.clone(), a.clone().alt(b.clone()));
+        let rhs = MaybeInstance::fmap(f.clone(), a).alt(MaybeInstance::fmap(f, b));
         assert_eq!(lhs, rhs);
 
         let f = WrappedFn::from(|x| x * 2);
         let a = Maybe::Nothing;
         let b = Maybe::Just(2);
-        let lhs = MaybeInstance::fmap(f.clone(), MaybeInstance::alt(a.clone(), b.clone()));
-        let rhs = MaybeInstance::alt(MaybeInstance::fmap(f.clone(), a), MaybeInstance::fmap(f, b));
+        let lhs = MaybeInstance::fmap(f.clone(), a.clone().alt(b.clone()));
+        let rhs = MaybeInstance::fmap(f.clone(), a).alt(MaybeInstance::fmap(f, b));
         assert_eq!(lhs, rhs);
     }
 
@@ -101,15 +95,14 @@ mod tests {
         let g = WrappedFn::from(|x| x * 2);
         let x = Maybe::Just(3);
 
-        let lhs = MaybeInstance::alt(Maybe::Just(f.clone()), Maybe::Just(g.clone())).apply(x);
-        let rhs = MaybeInstance::alt(Maybe::Just(f).apply(x), Maybe::Just(g.clone()).apply(x));
+        let lhs = Maybe::Just(f.clone()).alt(Maybe::Just(g.clone())).apply(x);
+        let rhs = Maybe::Just(f).apply(x).alt(Maybe::Just(g.clone()).apply(x));
         assert_eq!(lhs, rhs);
 
-        let lhs = MaybeInstance::alt(Maybe::Nothing, Maybe::Just(g.clone())).apply(x);
-        let rhs = MaybeInstance::alt(
-            Maybe::<WrappedFn<i32, i32>>::Nothing.apply(x),
-            Maybe::Just(g).apply(x),
-        );
+        let lhs = Maybe::Nothing.alt(Maybe::Just(g.clone())).apply(x);
+        let rhs = Maybe::<WrappedFn<i32, i32>>::Nothing
+            .apply(x)
+            .alt(Maybe::Just(g).apply(x));
         assert_eq!(lhs, rhs);
     }
 
@@ -124,16 +117,14 @@ mod tests {
 
     #[test]
     fn test_chained_alt() {
-        let x = MaybeInstance::ffallback::<i32>()
+        let x = MaybeInstance::fallback::<i32>()
             .alt(Maybe::Just(1))
-            .alt(Maybe::Just(2))
-            .eval();
+            .alt(Maybe::Just(2));
         assert_eq!(x, Maybe::Just(1));
 
-        let x = MaybeInstance::fchain(Maybe::Just(10))
+        let x = Maybe::Just(10)
             .alt(Maybe::Just(20))
-            .alt(MaybeInstance::fallback())
-            .eval();
+            .alt(MaybeInstance::fallback());
         assert_eq!(x, Maybe::Just(10));
     }
 }

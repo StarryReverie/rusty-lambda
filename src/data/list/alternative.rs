@@ -35,25 +35,19 @@ mod tests {
 
     #[test]
     fn test_alternative_left_identity_law() {
-        let xs = ListInstance::fchain(List::from(vec![1, 2]))
-            .alt(ListInstance::fallback())
-            .eval();
+        let xs = List::from(vec![1, 2]).alt(ListInstance::fallback());
         assert_eq!(xs, List::from(vec![1, 2]));
 
-        let xs: List<i32> = ListInstance::ffallback()
-            .alt(ListInstance::fallback())
-            .eval();
+        let xs: List<i32> = ListInstance::fallback().alt(ListInstance::fallback());
         assert_eq!(xs, List::empty());
     }
 
     #[test]
     fn test_alternative_right_identity_law() {
-        let xs = ListInstance::ffallback().alt(List::from(vec![1, 2])).eval();
+        let xs = ListInstance::fallback().alt(List::from(vec![1, 2]));
         assert_eq!(xs, List::from(vec![1, 2]));
 
-        let xs: List<i32> = ListInstance::ffallback()
-            .alt(ListInstance::fallback())
-            .eval();
+        let xs: List<i32> = ListInstance::fallback().alt(ListInstance::fallback());
         assert_eq!(xs, List::empty());
     }
 
@@ -62,15 +56,15 @@ mod tests {
         let a = List::from(vec![1]);
         let b = List::from(vec![2]);
         let c = List::from(vec![3]);
-        let lhs = ListInstance::alt(ListInstance::alt(a.clone(), b.clone()), c.clone());
-        let rhs = ListInstance::alt(a, ListInstance::alt(b, c));
+        let lhs = a.clone().alt(b.clone()).alt(c.clone());
+        let rhs = a.alt(b.alt(c));
         assert_eq!(lhs, rhs);
 
         let a = List::empty();
         let b = List::from(vec![2]);
         let c = List::from(vec![3]);
-        let lhs = ListInstance::alt(ListInstance::alt(a.clone(), b.clone()), c.clone());
-        let rhs = ListInstance::alt(a, ListInstance::alt(b, c));
+        let lhs = a.clone().alt(b.clone()).alt(c.clone());
+        let rhs = a.alt(b.alt(c));
         assert_eq!(lhs, rhs);
     }
 
@@ -80,28 +74,24 @@ mod tests {
         let b = List::from(vec![3, 4]);
         let f = WrappedFn::from(|x| x * 10);
 
-        let lhs = ListInstance::fmap(f.clone(), ListInstance::alt(a.clone(), b.clone()));
-        let rhs = ListInstance::alt(
-            ListInstance::fmap(f.clone(), a),
-            ListInstance::fmap(f.clone(), b),
-        );
+        let lhs = ListInstance::fmap(f.clone(), a.clone().alt(b.clone()));
+        let rhs = ListInstance::fmap(f.clone(), a).alt(ListInstance::fmap(f.clone(), b));
         assert_eq!(lhs, rhs);
 
         let a = List::empty();
         let b = List::from(vec![3, 4]);
 
-        let lhs = ListInstance::fmap(f.clone(), ListInstance::alt(a.clone(), b.clone()));
-        let rhs = ListInstance::alt(ListInstance::fmap(f.clone(), a), ListInstance::fmap(f, b));
+        let lhs = ListInstance::fmap(f.clone(), a.clone().alt(b.clone()));
+        let rhs = ListInstance::fmap(f.clone(), a).alt(ListInstance::fmap(f, b));
         assert_eq!(lhs, rhs);
     }
 
     #[test]
     fn test_chained_alt() {
-        let xs = ListInstance::fchain(List::from(vec![1, 2]))
+        let xs = List::from(vec![1, 2])
             .alt(List::from(vec![3]))
             .alt(ListInstance::fallback())
-            .alt(List::from(vec![4, 5]))
-            .eval();
+            .alt(List::from(vec![4, 5]));
         assert_eq!(xs, List::from(vec![1, 2, 3, 4, 5]));
     }
 }

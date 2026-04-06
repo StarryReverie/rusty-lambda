@@ -1,0 +1,25 @@
+#[macro_export]
+macro_rules! derive_traversable_for_wrapper {
+    ($instance:ty, $wrapper:ident) => {
+        impl $crate::control::structure::traversable::Traversable for $instance {
+            fn traverse<F, A, B, G>(
+                _tag: F,
+                map: G,
+                container: Self::Type<A>,
+            ) -> F::Type<Self::Type<B>>
+            where
+                F: $crate::control::context::applicative::Applicative,
+                A: $crate::base::value::Value,
+                B: $crate::base::value::Value,
+                G: for<'a> $crate::base::value::Value<
+                        View<'a>: $crate::base::function::ConcurrentFn<A, Output = F::Type<B>>,
+                    >,
+            {
+                F::fmap(
+                    $crate::base::function::WrappedFn::from(|x| $wrapper(x)),
+                    $crate::base::function::ConcurrentFn::call(&map.view(), container.0),
+                )
+            }
+        }
+    };
+}

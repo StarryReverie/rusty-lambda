@@ -1,6 +1,6 @@
 use crate::base::function::{ConcurrentFn, constv};
 use crate::base::hkt::TypeConstructor1;
-use crate::base::value::{Concurrent, Value};
+use crate::base::value::{StaticConcurrent, Value};
 use crate::control::context::applicative::Applicative;
 
 pub trait Monad: Applicative {
@@ -29,7 +29,7 @@ pub trait Monad: Applicative {
 }
 
 pub trait MonadExt {
-    type Wrapped: Concurrent;
+    type Wrapped: StaticConcurrent;
     type Instance: Monad<Type<Self::Wrapped> = Self>;
 
     fn bind<B, G>(self, g: G) -> <Self::Instance as TypeConstructor1>::Type<B>

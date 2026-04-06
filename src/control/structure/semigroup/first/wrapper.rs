@@ -1,5 +1,5 @@
 use crate::base::hkt::TypeConstructor1;
-use crate::base::value::{Concurrent, SimpleValue, Value};
+use crate::base::value::{SimpleValue, StaticConcurrent, Value};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 pub struct First<T>(pub T);
@@ -19,7 +19,7 @@ impl TypeConstructor1 for FirstInstance {
     type Type<A1>
         = First<A1>
     where
-        A1: Concurrent;
+        A1: StaticConcurrent;
 }
 
 crate::derive_functor_for_wrapper!(FirstInstance, First);

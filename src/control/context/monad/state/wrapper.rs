@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 
 use crate::base::function::WrappedFn;
 use crate::base::hkt::TypeConstructor1;
-use crate::base::value::{Concurrent, SimpleValue, Value};
+use crate::base::value::{SimpleValue, StaticConcurrent, Value};
 
 pub struct State<S, A>(pub WrappedFn<S, (A, S)>);
 
@@ -56,7 +56,7 @@ where
     type Type<A>
         = State<S, A>
     where
-        A: Concurrent;
+        A: StaticConcurrent;
 }
 
 impl<S> State<S, S>

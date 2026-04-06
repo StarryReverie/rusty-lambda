@@ -1,5 +1,5 @@
 use crate::base::hkt::TypeConstructor1;
-use crate::base::value::{Concurrent, SimpleValue, Value};
+use crate::base::value::{SimpleValue, StaticConcurrent, Value};
 use crate::data::maybe::{Maybe, MaybeInstance};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
@@ -20,7 +20,7 @@ impl TypeConstructor1 for LastInstance {
     type Type<A1>
         = Last<A1>
     where
-        A1: Concurrent;
+        A1: StaticConcurrent;
 }
 
 crate::derive_functor_for_nested_functor!(LastInstance, Last, MaybeInstance);

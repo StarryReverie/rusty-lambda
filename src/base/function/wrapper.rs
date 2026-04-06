@@ -4,7 +4,7 @@ use std::sync::Arc;
 
 use crate::base::function::{ConcurrentFn, constv};
 use crate::base::hkt::TypeConstructor1;
-use crate::base::value::{Concurrent, StaticConcurrent, Value};
+use crate::base::value::{StaticConcurrent, Value};
 use crate::control::context::applicative::{Applicative, ApplicativeExt};
 use crate::control::context::monad::{Monad, MonadExt};
 use crate::control::structure::functor::Functor;
@@ -60,11 +60,14 @@ impl<T, R> Clone for WrappedFn<T, R> {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 pub struct WrappedFnInstance<T>(PhantomData<T>);
 
-impl<E> TypeConstructor1 for WrappedFnInstance<E> {
+impl<E> TypeConstructor1 for WrappedFnInstance<E>
+where
+    E: StaticConcurrent,
+{
     type Type<A>
         = WrappedFn<E, A>
     where
-        A: Concurrent;
+        A: StaticConcurrent;
 }
 
 impl<E> Functor for WrappedFnInstance<E>

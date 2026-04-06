@@ -1,11 +1,11 @@
-use crate::base::value::{Concurrent, StaticConcurrent, Value};
+use crate::base::value::{StaticConcurrent, Value};
 use crate::control::context::alternative::{Alternative, AlternativeExt};
 use crate::data::maybe::{Maybe, MaybeInstance};
 
 impl Alternative for MaybeInstance {
     fn fallback<A>() -> Self::Type<A>
     where
-        A: Concurrent,
+        A: StaticConcurrent,
     {
         Maybe::Nothing
     }

@@ -1,6 +1,6 @@
 use crate::base::function::ConcurrentFn;
 use crate::base::hkt::TypeConstructor1;
-use crate::base::value::{Concurrent, Value};
+use crate::base::value::{StaticConcurrent, Value};
 use crate::control::structure::functor::Functor;
 
 pub trait Applicative: Functor {
@@ -16,7 +16,7 @@ pub trait Applicative: Functor {
 }
 
 pub trait ApplicativeExt {
-    type Wrapped: Concurrent;
+    type Wrapped: StaticConcurrent;
     type Instance: Applicative<Type<Self::Wrapped> = Self>;
 
     fn apply<A, B>(

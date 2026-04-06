@@ -165,16 +165,14 @@ mod tests {
     fn test_applicative_identity_law() {
         let id = WrappedFn::from(|x| x);
         let reader = WrappedFnInstance::pure(42);
-        let result = WrappedFnInstance::apure(id).apply(reader).eval();
+        let result = WrappedFnInstance::pure(id).apply(reader);
         assert_eq!(result(99), 42);
     }
 
     #[test]
     fn test_applicative_homomorphism_law() {
         let h = WrappedFn::from(|x| x * 2);
-        let lhs = WrappedFnInstance::apure(h.clone())
-            .apply(WrappedFnInstance::pure(3))
-            .eval();
+        let lhs = WrappedFnInstance::pure(h.clone()).apply(WrappedFnInstance::pure(3));
         let rhs = WrappedFnInstance::pure(h(3));
         assert_eq!(lhs(99), rhs(99));
     }
@@ -184,12 +182,9 @@ mod tests {
         let h = WrappedFn::curry(|e, x| x + e);
         let x = 5;
 
-        let lhs = WrappedFnInstance::achain(h.clone())
-            .apply(WrappedFnInstance::pure(x))
-            .eval();
-        let rhs = WrappedFnInstance::apure(WrappedFn::from(move |g: WrappedFn<i32, i32>| g(x)))
-            .apply(h)
-            .eval();
+        let lhs = h.clone().apply(WrappedFnInstance::pure(x));
+        let rhs =
+            WrappedFnInstance::pure(WrappedFn::from(move |g: WrappedFn<i32, i32>| g(x))).apply(h);
         assert_eq!(lhs(3), rhs(3));
         assert_eq!(lhs(10), rhs(10));
     }
@@ -198,16 +193,13 @@ mod tests {
     fn test_applicative_composition_law() {
         let g = WrappedFn::curry(|_e, x| x * 2);
         let h = WrappedFn::curry(|_e, x| x + 3);
-        let composed = WrappedFnInstance::apure(WrappedFn::curry(compose))
+        let composed = WrappedFnInstance::pure(WrappedFn::curry(compose))
             .apply(g.clone())
-            .apply(h.clone())
-            .eval();
+            .apply(h.clone());
 
         let x = WrappedFnInstance::pure(4);
-        let lhs = WrappedFnInstance::achain(composed).apply(x.clone()).eval();
-        let rhs = WrappedFnInstance::achain(g.clone())
-            .apply(WrappedFnInstance::achain(h.clone()).apply(x).eval())
-            .eval();
+        let lhs = composed.apply(x.clone());
+        let rhs = g.apply(h.apply(x));
         assert_eq!(lhs(99), rhs(99));
     }
 

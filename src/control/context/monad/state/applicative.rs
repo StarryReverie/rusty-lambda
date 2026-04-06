@@ -53,24 +53,20 @@ mod tests {
     fn test_apply() {
         let g = State::from(|s| (WrappedFn::from(move |x| x + s), s));
         let x = State::from(|s| (10, s));
-        let state = StateInstance::achain(g).apply(x).eval();
+        let state = g.apply(x);
         assert_eq!(State::run(&state, 5), (15, 5));
     }
 
     #[test]
     fn test_applicative_identity_law() {
-        let state = StateInstance::apure(WrappedFn::from(|x| x))
-            .apply(State::from(|s| (s + 10, s)))
-            .eval();
+        let state = StateInstance::pure(WrappedFn::from(|x| x)).apply(State::from(|s| (s + 10, s)));
         assert_eq!(State::run(&state, 5), (15, 5));
     }
 
     #[test]
     fn test_applicative_homomorphism_law() {
         let h = WrappedFn::from(|x| x * 2);
-        let lhs = StateInstance::apure(h.clone())
-            .apply(StateInstance::pure(3))
-            .eval();
+        let lhs = StateInstance::pure(h.clone()).apply(StateInstance::pure(3));
         let rhs = StateInstance::pure(h(3));
         assert_eq!(State::run(&lhs, 99), State::run(&rhs, 99));
     }
@@ -80,12 +76,8 @@ mod tests {
         let h = State::from(|s| (WrappedFn::from(move |x| x + s), s));
         let x = 5;
 
-        let lhs = StateInstance::achain(h.clone())
-            .apply(StateInstance::pure(x))
-            .eval();
-        let rhs = StateInstance::apure(WrappedFn::from(move |g: WrappedFn<i32, i32>| g(x)))
-            .apply(h)
-            .eval();
+        let lhs = h.clone().apply(StateInstance::pure(x));
+        let rhs = StateInstance::pure(WrappedFn::from(move |g: WrappedFn<i32, i32>| g(x))).apply(h);
         assert_eq!(State::run(&lhs, 3), State::run(&rhs, 3));
         assert_eq!(State::run(&lhs, 10), State::run(&rhs, 10));
     }
@@ -94,16 +86,13 @@ mod tests {
     fn test_applicative_composition_law() {
         let g = State::from(|s| (WrappedFn::from(move |x| x * s), s));
         let h = State::from(|s| (WrappedFn::from(move |x| x + s), s));
-        let composed = StateInstance::apure(WrappedFn::curry(compose))
+        let composed = StateInstance::pure(WrappedFn::curry(compose))
             .apply(g.clone())
-            .apply(h.clone())
-            .eval();
+            .apply(h.clone());
 
         let x = StateInstance::pure(4);
-        let lhs = StateInstance::achain(composed).apply(x.clone()).eval();
-        let rhs = StateInstance::achain(g)
-            .apply(StateInstance::achain(h).apply(x).eval())
-            .eval();
+        let lhs = composed.apply(x.clone());
+        let rhs = g.apply(h.apply(x));
         assert_eq!(State::run(&lhs, 3), State::run(&rhs, 3));
         assert_eq!(State::run(&lhs, 10), State::run(&rhs, 10));
     }

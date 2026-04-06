@@ -22,7 +22,7 @@ impl Applicative for ListInstance {
         match gs.decompose() {
             Maybe::Just((g, gs)) => {
                 let ys = ListInstance::fmap(g, xs.clone());
-                ys.append(Self::apply(gs, xs))
+                ys.append(gs.apply(xs))
             }
             Maybe::Nothing => List::empty(),
         }
@@ -53,14 +53,14 @@ mod tests {
     fn test_apply_nil_gs() {
         let gs: List<fn(i32) -> i32> = List::empty();
         let xs = List::from(vec![1, 2]);
-        assert_eq!(ListInstance::apply(gs, xs), List::empty());
+        assert_eq!(gs.apply(xs), List::empty());
     }
 
     #[test]
     fn test_apply_nil_xs() {
         let gs = List::singleton(&|x: i32| x + 1);
         let xs: List<i32> = List::empty();
-        assert_eq!(ListInstance::apply(gs, xs), List::empty());
+        assert_eq!(gs.apply(xs), List::empty());
     }
 
     #[test]
@@ -69,7 +69,7 @@ mod tests {
         let mul2: fn(i32) -> i32 = |x| x * 2;
         let gs = List::from(vec![add1, mul2]);
         let xs = List::from(vec![1, 2]);
-        let result = ListInstance::apply(gs, xs);
+        let result = gs.apply(xs);
         let expected = List::from(vec![2, 3, 2, 4]);
         assert_eq!(result, expected);
     }
@@ -80,17 +80,17 @@ mod tests {
         let gs = List::singleton(arc(id));
 
         let xs = List::from(vec![1, 2, 3]);
-        assert_eq!(ListInstance::apply(gs.clone(), xs.clone()), xs);
+        assert_eq!(gs.clone().apply(xs.clone()), xs);
 
         let xs: List<i32> = List::empty();
-        assert_eq!(ListInstance::apply(gs, xs), List::empty());
+        assert_eq!(gs.apply(xs), List::empty());
     }
 
     #[test]
     fn test_applicative_homomorphism_law() {
         let h = |x| x * 2;
         assert_eq!(
-            ListInstance::apply(ListInstance::pure(arc(h)), ListInstance::pure(3)),
+            ListInstance::pure(arc(h)).apply(ListInstance::pure(3)),
             ListInstance::pure(h(3)),
         );
     }
@@ -102,13 +102,13 @@ mod tests {
         let x = 5;
 
         let gs = List::from(vec![add10, mul2]);
-        let lhs = ListInstance::apply(gs.clone(), ListInstance::pure(x));
-        let rhs = ListInstance::apply(ListInstance::pure(arc(move |g: fn(i32) -> i32| g(x))), gs);
+        let lhs = gs.clone().apply(ListInstance::pure(x));
+        let rhs = ListInstance::pure(arc(move |g: fn(i32) -> i32| g(x))).apply(gs);
         assert_eq!(lhs, rhs);
 
         let gs: List<fn(i32) -> i32> = List::empty();
-        let lhs = ListInstance::apply(gs.clone(), ListInstance::pure(x));
-        let rhs = ListInstance::apply(ListInstance::pure(arc(move |g: fn(i32) -> i32| g(x))), gs);
+        let lhs = gs.clone().apply(ListInstance::pure(x));
+        let rhs = ListInstance::pure(arc(move |g: fn(i32) -> i32| g(x))).apply(gs);
         assert_eq!(lhs, rhs);
     }
 
@@ -122,12 +122,11 @@ mod tests {
         let gs = List::from(vec![add3, mul2.clone()]);
         let hs = List::from(vec![inc, mul2]);
 
-        let composed = ListInstance::apure(WrappedFn::curry(compose))
+        let composed = ListInstance::pure(WrappedFn::curry(compose))
             .apply(gs.clone())
-            .apply(hs.clone())
-            .eval();
-        let lhs = ListInstance::apply(composed, xs.clone());
-        let rhs = ListInstance::apply(gs, ListInstance::apply(hs, xs));
+            .apply(hs.clone());
+        let lhs = composed.apply(xs.clone());
+        let rhs = gs.apply(hs.apply(xs));
         assert_eq!(lhs, rhs);
     }
 }

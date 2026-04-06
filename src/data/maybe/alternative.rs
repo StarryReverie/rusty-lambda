@@ -24,7 +24,7 @@ impl Alternative for MaybeInstance {
 #[cfg(test)]
 mod tests {
     use crate::base::function::WrappedFn;
-    use crate::control::context::applicative::Applicative;
+    use crate::control::context::applicative::ApplicativeExt;
     use crate::control::structure::functor::Functor;
 
     use super::*;
@@ -93,36 +93,24 @@ mod tests {
         let g = WrappedFn::from(|x| x * 2);
         let x = Maybe::Just(3);
 
-        let lhs = MaybeInstance::apply(
-            MaybeInstance::alt(Maybe::Just(f.clone()), Maybe::Just(g.clone())),
-            x,
-        );
-        let rhs = MaybeInstance::alt(
-            MaybeInstance::apply(Maybe::Just(f), x),
-            MaybeInstance::apply(Maybe::Just(g.clone()), x),
-        );
+        let lhs = MaybeInstance::alt(Maybe::Just(f.clone()), Maybe::Just(g.clone())).apply(x);
+        let rhs = MaybeInstance::alt(Maybe::Just(f).apply(x), Maybe::Just(g.clone()).apply(x));
         assert_eq!(lhs, rhs);
 
-        let lhs = MaybeInstance::apply(
-            MaybeInstance::alt(Maybe::Nothing, Maybe::Just(g.clone())),
-            x,
-        );
+        let lhs = MaybeInstance::alt(Maybe::Nothing, Maybe::Just(g.clone())).apply(x);
         let rhs = MaybeInstance::alt(
-            MaybeInstance::apply(Maybe::<WrappedFn<i32, i32>>::Nothing, x),
-            MaybeInstance::apply(Maybe::Just(g), x),
+            Maybe::<WrappedFn<i32, i32>>::Nothing.apply(x),
+            Maybe::Just(g).apply(x),
         );
         assert_eq!(lhs, rhs);
     }
 
     #[test]
     fn test_alternative_annihilativity_law() {
-        let res = MaybeInstance::apply(Maybe::<WrappedFn<i32, i32>>::Nothing, Maybe::Just(3));
+        let res = Maybe::<WrappedFn<i32, i32>>::Nothing.apply(Maybe::Just(3));
         assert_eq!(res, Maybe::Nothing);
 
-        let res = MaybeInstance::apply(
-            Maybe::Just(WrappedFn::from(|x| x + 1)),
-            Maybe::<i32>::Nothing,
-        );
+        let res = Maybe::Just(WrappedFn::from(|x| x + 1)).apply(Maybe::<i32>::Nothing);
         assert_eq!(res, Maybe::Nothing);
     }
 

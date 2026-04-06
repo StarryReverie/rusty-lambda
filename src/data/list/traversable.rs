@@ -17,10 +17,7 @@ impl Traversable for ListInstance {
             Maybe::Just((x, xs)) => {
                 let x = map.view().call(x);
                 let xs = Self::traverse(tag, map, xs);
-                F::apure(WrappedFn::curry(List::cons))
-                    .apply(x)
-                    .apply(xs)
-                    .eval()
+                F::apply(F::apply(F::pure(WrappedFn::curry(List::cons)), x), xs)
             }
             Maybe::Nothing => F::pure(List::empty()),
         }

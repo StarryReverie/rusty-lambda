@@ -24,5 +24,8 @@ impl TypeConstructor1 for FirstInstance {
 }
 
 crate::derive_functor_for_nested_functor!(FirstInstance, First, MaybeInstance);
+crate::derive_foldable_for_nested_foldable!(FirstInstance, First, MaybeInstance);
+crate::derive_traversable_for_nested_traversable!(FirstInstance, First, MaybeInstance);
 crate::derive_applicative_for_nested_applicative!(FirstInstance, First, MaybeInstance);
+crate::derive_alternative_for_nested_alternative!(FirstInstance, First, MaybeInstance);
 crate::derive_monad_for_nested_monad!(FirstInstance, First, MaybeInstance);

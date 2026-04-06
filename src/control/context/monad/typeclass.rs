@@ -26,67 +26,6 @@ pub trait Monad: Applicative {
     {
         Self::bind(x, constv(y))
     }
-
-    fn mchain<A>(x: Self::Type<A>) -> MonadChain<Self, A>
-    where
-        Self: Sized,
-        A: Value,
-    {
-        MonadChain::new(x)
-    }
-
-    fn mreturn<A>(x: A) -> MonadChain<Self, A>
-    where
-        Self: Sized,
-        A: Value,
-    {
-        Self::mchain(Self::ret(x))
-    }
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
-pub struct MonadChain<I, A>
-where
-    I: Monad,
-    A: Concurrent,
-{
-    value: I::Type<A>,
-}
-
-impl<I, A> MonadChain<I, A>
-where
-    I: Monad,
-    A: Concurrent,
-{
-    fn new(value: I::Type<A>) -> Self {
-        Self { value }
-    }
-
-    pub fn eval(self) -> I::Type<A> {
-        self.value
-    }
-}
-
-impl<I, A> MonadChain<I, A>
-where
-    I: Monad,
-    A: Value,
-{
-    pub fn bind<B, G>(self, g: G) -> MonadChain<I, B>
-    where
-        B: Value,
-        G: for<'a> Value<View<'a>: ConcurrentFn<A, Output = I::Type<B>>>,
-    {
-        MonadChain::new(I::bind(self.value, g))
-    }
-
-    pub fn then<B>(self, y: I::Type<B>) -> MonadChain<I, B>
-    where
-        B: Value,
-        I::Type<B>: Value,
-    {
-        MonadChain::new(I::then(self.value, y))
-    }
 }
 
 pub trait MonadExt {

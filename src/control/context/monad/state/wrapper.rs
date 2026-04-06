@@ -88,8 +88,8 @@ where
 #[cfg(test)]
 mod tests {
     use crate::base::function::WrappedFn;
-    use crate::control::context::monad::Monad;
     use crate::control::context::monad::state::StateInstance;
+    use crate::control::context::monad::{Monad, MonadExt};
     use crate::data::list::List;
     use crate::data::maybe::Maybe;
 
@@ -117,13 +117,12 @@ mod tests {
             })
         };
 
-        let state = StateInstance::mchain(State::from(|s| ((), s)))
+        let state = State::from(|s| ((), s))
             .bind(push(1))
             .bind(push(2))
             .bind(push(3))
             .bind(WrappedFn::from(move |_| pop()))
-            .bind(WrappedFn::from(move |_| pop()))
-            .eval();
+            .bind(WrappedFn::from(move |_| pop()));
 
         let (top, stack) = State::run(&state, List::empty());
         assert_eq!(top, 2);
@@ -132,9 +131,8 @@ mod tests {
 
     #[test]
     fn test_eval_vs_exec() {
-        let m = StateInstance::mreturn(1)
-            .bind(WrappedFn::from(|x| State::from(move |s| (x + s, s * 2))))
-            .eval();
+        let m =
+            StateInstance::ret(1).bind(WrappedFn::from(|x| State::from(move |s| (x + s, s * 2))));
         assert_eq!(State::eval(&m, 3), 4);
         assert_eq!(State::exec(&m, 3), 6);
     }

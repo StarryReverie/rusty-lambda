@@ -215,33 +215,23 @@ mod tests {
     #[test]
     fn test_monad_left_identity_law() {
         let g = WrappedFn::curry(|x, e| x + e);
-        let lhs = WrappedFnInstance::mreturn(3).bind(g.clone()).eval();
-        assert_eq!(lhs(10), g(3)(10));
+        let res = WrappedFnInstance::ret(3).bind(g.clone());
+        assert_eq!(res(10), g(3)(10));
     }
 
     #[test]
     fn test_monad_right_identity_law() {
         let m = WrappedFn::from(|e: i32| e * 2);
-        let result = WrappedFnInstance::mchain(m)
-            .bind(WrappedFn::from(WrappedFnInstance::ret))
-            .eval();
-        assert_eq!(result(5), 10);
+        let res = m.bind(WrappedFn::from(WrappedFnInstance::ret));
+        assert_eq!(res(5), 10);
     }
 
     #[test]
     fn test_monad_associativity_law() {
         let g = WrappedFn::curry(|x, _e| x + 1);
         let h = WrappedFn::curry(|x, _e| x * 2);
-
-        let lhs = WrappedFnInstance::mreturn(3)
-            .bind(g.clone())
-            .bind(h.clone())
-            .eval();
-        let rhs = WrappedFnInstance::mreturn(3)
-            .bind(WrappedFn::from(move |x| {
-                WrappedFnInstance::mchain(g(x)).bind(h.clone()).eval()
-            }))
-            .eval();
+        let lhs = WrappedFnInstance::ret(3).bind(g.clone()).bind(h.clone());
+        let rhs = WrappedFnInstance::ret(3).bind(WrappedFn::from(move |x| g(x).bind(h.clone())));
         assert_eq!(lhs(99), rhs(99));
     }
 }

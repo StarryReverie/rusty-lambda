@@ -39,17 +39,17 @@ mod tests {
     fn test_bind() {
         let xs: List<i32> = List::empty();
         let g = |x| List::singleton(x + 1);
-        let ys = ListInstance::bind(xs, arc(g));
+        let ys = xs.bind(arc(g));
         assert_eq!(ys, List::empty());
 
         let xs = List::from(vec![1, 2, 3]);
         let g = |x| List::singleton(x + 1);
-        let ys = ListInstance::bind(xs, arc(g));
+        let ys = xs.bind(arc(g));
         assert_eq!(ys, List::from(vec![2, 3, 4]));
 
         let xs = List::from(vec![1, 2]);
         let g = |x| List::from(vec![x as i64, x as i64 * 10]);
-        let ys = ListInstance::bind(xs, arc(g));
+        let ys = xs.bind(arc(g));
         assert_eq!(ys, List::from(vec![1i64, 10i64, 2i64, 20i64]));
     }
 
@@ -57,12 +57,12 @@ mod tests {
     fn test_monad_left_identity_law() {
         let g = |x: i32| List::from(vec![x * 2, x * 3]);
 
-        let lhs = ListInstance::bind(ListInstance::ret(3), arc(g));
+        let lhs = ListInstance::ret(3).bind(arc(g));
         let rhs = g(3);
         assert_eq!(lhs, rhs);
 
         let g = |_x: i32| -> List<i32> { List::empty() };
-        let lhs = ListInstance::bind(ListInstance::ret(5), arc(g));
+        let lhs = ListInstance::ret(5).bind(arc(g));
         let rhs = g(5);
         assert_eq!(lhs, rhs);
     }
@@ -70,11 +70,11 @@ mod tests {
     #[test]
     fn test_monad_right_identity_law() {
         let xs = List::from(vec![1, 2, 3]);
-        let ys = ListInstance::bind(xs.clone(), arc(|x| ListInstance::ret(x)));
+        let ys = xs.clone().bind(arc(|x| ListInstance::ret(x)));
         assert_eq!(ys, xs);
 
         let xs: List<i32> = List::empty();
-        let ys = ListInstance::bind(xs.clone(), arc(|x| ListInstance::ret(x)));
+        let ys = xs.clone().bind(arc(|x| ListInstance::ret(x)));
         assert_eq!(ys, xs);
     }
 
@@ -84,30 +84,15 @@ mod tests {
         let h = |x| List::singleton(x + 1);
 
         let xs = List::from(vec![1, 2]);
-        let lhs = ListInstance::bind(ListInstance::bind(xs.clone(), arc(g)), arc(h));
-        let k = move |x| ListInstance::bind(g(x), arc(h));
-        let rhs = ListInstance::bind(xs, arc(k));
+        let lhs = xs.clone().bind(arc(g)).bind(arc(h));
+        let k = move |x| g(x).bind(arc(h));
+        let rhs = xs.bind(arc(k));
         assert_eq!(lhs, rhs);
 
         let xs: List<i32> = List::empty();
-        let lhs = ListInstance::bind(ListInstance::bind(xs.clone(), arc(g)), arc(h));
-        let k = move |x| ListInstance::bind(g(x), arc(h));
-        let rhs = ListInstance::bind(xs, arc(k));
+        let lhs = xs.clone().bind(arc(g)).bind(arc(h));
+        let k = move |x| g(x).bind(arc(h));
+        let rhs = xs.bind(arc(k));
         assert_eq!(lhs, rhs);
-    }
-
-    #[test]
-    fn test_chained_bind() {
-        let xs = ListInstance::mreturn(1)
-            .bind(arc(|x| List::from(vec![x, x + 1])))
-            .bind(arc(|x| List::singleton(x * 10)))
-            .eval();
-        assert_eq!(xs, List::from(vec![10, 20i32]));
-
-        let xs: List<i32> = List::empty();
-        let ys = ListInstance::mchain(xs)
-            .bind(arc(|x| List::singleton(x)))
-            .eval();
-        assert_eq!(ys, List::empty());
     }
 }

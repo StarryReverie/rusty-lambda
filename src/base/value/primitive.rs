@@ -24,6 +24,9 @@ impl Primitive for u64 {}
 impl Primitive for u128 {}
 impl Primitive for usize {}
 
+impl Primitive for f32 {}
+impl Primitive for f64 {}
+
 impl<T> Primitive for &T {}
 
 impl Primitive for &str {}

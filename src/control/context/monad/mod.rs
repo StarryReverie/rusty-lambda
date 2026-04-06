@@ -3,4 +3,4 @@ pub mod state;
 mod derive;
 mod typeclass;
 
-pub use typeclass::Monad;
+pub use typeclass::{Monad, MonadExt};

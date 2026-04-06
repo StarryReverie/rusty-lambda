@@ -1,6 +1,6 @@
 #[macro_export]
 macro_rules! derive_monad_for_wrapper {
-    ($instance:ty) => {
+    ($instance:ty, $wrapper:ident) => {
         impl $crate::control::context::monad::Monad for $instance {
             fn bind<A, B, G>(x: Self::Type<A>, g: G) -> Self::Type<B>
             where
@@ -12,6 +12,14 @@ macro_rules! derive_monad_for_wrapper {
             {
                 $crate::base::function::ConcurrentFn::call(&g.view(), x.0)
             }
+        }
+
+        impl<T> $crate::control::context::monad::MonadExt for $wrapper<T>
+        where
+            T: $crate::base::value::StaticConcurrent,
+        {
+            type Wrapped = T;
+            type Instance = $instance;
         }
     };
 }
@@ -37,6 +45,14 @@ macro_rules! derive_monad_for_nested_monad {
                     ),
                 )
             }
+        }
+
+        impl<T> $crate::control::context::monad::MonadExt for $wrapper<T>
+        where
+            T: $crate::base::value::StaticConcurrent,
+        {
+            type Wrapped = T;
+            type Instance = $instance;
         }
     };
 }

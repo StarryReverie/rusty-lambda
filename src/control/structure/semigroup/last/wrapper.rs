@@ -24,4 +24,4 @@ impl TypeConstructor1 for LastInstance {
 
 crate::derive_functor_for_wrapper!(LastInstance, Last);
 crate::derive_applicative_for_wrapper!(LastInstance, Last);
-crate::derive_monad_for_wrapper!(LastInstance);
+crate::derive_monad_for_wrapper!(LastInstance, Last);

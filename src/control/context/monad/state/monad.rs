@@ -1,7 +1,7 @@
 use crate::base::function::ConcurrentFn;
-use crate::base::value::Value;
-use crate::control::context::monad::Monad;
+use crate::base::value::{StaticConcurrent, Value};
 use crate::control::context::monad::state::{State, StateInstance};
+use crate::control::context::monad::{Monad, MonadExt};
 
 impl<S> Monad for StateInstance<S>
 where
@@ -19,6 +19,15 @@ where
             State::run(&r, s)
         })
     }
+}
+
+impl<S, A> MonadExt for State<S, A>
+where
+    S: Value,
+    A: StaticConcurrent,
+{
+    type Wrapped = A;
+    type Instance = StateInstance<S>;
 }
 
 #[cfg(test)]

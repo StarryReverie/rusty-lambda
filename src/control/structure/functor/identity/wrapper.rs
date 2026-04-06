@@ -26,7 +26,7 @@ crate::derive_functor_for_wrapper!(IdentityInstance, Identity);
 crate::derive_foldable_for_wrapper!(IdentityInstance, Identity);
 crate::derive_traversable_for_wrapper!(IdentityInstance, Identity);
 crate::derive_applicative_for_wrapper!(IdentityInstance, Identity);
-crate::derive_monad_for_wrapper!(IdentityInstance);
+crate::derive_monad_for_wrapper!(IdentityInstance, Identity);
 
 crate::derive_semigroup_for_wrapper!(for<T>, Identity<T>);
 crate::derive_monoid_for_wrapper!(for<T>, Identity<T>);

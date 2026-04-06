@@ -1,5 +1,5 @@
-use crate::base::value::{Concurrent, Value};
-use crate::control::context::alternative::Alternative;
+use crate::base::value::{Concurrent, StaticConcurrent, Value};
+use crate::control::context::alternative::{Alternative, AlternativeExt};
 use crate::data::maybe::{Maybe, MaybeInstance};
 
 impl Alternative for MaybeInstance {
@@ -19,6 +19,14 @@ impl Alternative for MaybeInstance {
             _ => another,
         }
     }
+}
+
+impl<T> AlternativeExt for Maybe<T>
+where
+    T: StaticConcurrent,
+{
+    type Wrapped = T;
+    type Instance = MaybeInstance;
 }
 
 #[cfg(test)]

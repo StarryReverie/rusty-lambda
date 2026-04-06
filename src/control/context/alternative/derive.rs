@@ -22,5 +22,13 @@ macro_rules! derive_alternative_for_nested_alternative {
                 )
             }
         }
+
+        impl<T> $crate::control::context::alternative::AlternativeExt for $wrapper<T>
+        where
+            T: $crate::base::value::StaticConcurrent,
+        {
+            type Wrapped = T;
+            type Instance = $instance;
+        }
     };
 }

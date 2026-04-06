@@ -1,4 +1,4 @@
 mod derive;
 mod typeclass;
 
-pub use typeclass::{Alternative, AlternativeChain};
+pub use typeclass::{Alternative, AlternativeExt};

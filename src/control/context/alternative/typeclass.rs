@@ -46,3 +46,16 @@ where
         self.0
     }
 }
+
+pub trait AlternativeExt {
+    type Wrapped: Concurrent;
+    type Instance: Alternative<Type<Self::Wrapped> = Self>;
+
+    fn alt(self, another: Self) -> Self
+    where
+        Self: Sized,
+        Self::Wrapped: Value,
+    {
+        Self::Instance::alt::<Self::Wrapped>(self, another)
+    }
+}

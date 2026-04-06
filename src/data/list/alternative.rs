@@ -1,5 +1,5 @@
-use crate::base::value::{Concurrent, Value};
-use crate::control::context::alternative::Alternative;
+use crate::base::value::{Concurrent, StaticConcurrent, Value};
+use crate::control::context::alternative::{Alternative, AlternativeExt};
 use crate::data::list::{List, ListInstance};
 
 impl Alternative for ListInstance {
@@ -16,6 +16,14 @@ impl Alternative for ListInstance {
     {
         one.append(another)
     }
+}
+
+impl<T> AlternativeExt for List<T>
+where
+    T: StaticConcurrent,
+{
+    type Wrapped = T;
+    type Instance = ListInstance;
 }
 
 #[cfg(test)]

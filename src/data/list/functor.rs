@@ -1,6 +1,6 @@
 use crate::base::function::ConcurrentFn;
-use crate::base::value::Value;
-use crate::control::structure::functor::Functor;
+use crate::base::value::{StaticConcurrent, Value};
+use crate::control::structure::functor::{Functor, FunctorExt};
 use crate::data::list::{List, ListInstance};
 use crate::data::maybe::Maybe;
 
@@ -19,6 +19,14 @@ impl Functor for ListInstance {
             Maybe::Nothing => List::empty(),
         }
     }
+}
+
+impl<T> FunctorExt for List<T>
+where
+    T: StaticConcurrent,
+{
+    type Wrapped = T;
+    type Instance = ListInstance;
 }
 
 #[cfg(test)]

@@ -1,7 +1,7 @@
 use crate::base::function::ConcurrentFn;
-use crate::base::value::Value;
+use crate::base::value::{StaticConcurrent, Value};
 use crate::control::context::monad::state::{State, StateInstance};
-use crate::control::structure::functor::Functor;
+use crate::control::structure::functor::{Functor, FunctorExt};
 
 impl<S> Functor for StateInstance<S>
 where
@@ -18,6 +18,15 @@ where
             (g.view().call(a), s)
         })
     }
+}
+
+impl<S, A> FunctorExt for State<S, A>
+where
+    S: Value,
+    A: StaticConcurrent,
+{
+    type Wrapped = A;
+    type Instance = StateInstance<S>;
 }
 
 #[cfg(test)]

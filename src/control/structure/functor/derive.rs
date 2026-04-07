@@ -13,6 +13,14 @@ macro_rules! derive_functor_for_wrapper {
                 $wrapper($crate::base::function::ConcurrentFn::call(&g.view(), x.0))
             }
         }
+
+        impl<T> $crate::control::structure::functor::FunctorExt for $wrapper<T>
+        where
+            T: $crate::base::value::StaticConcurrent,
+        {
+            type Wrapped = T;
+            type Instance = $instance;
+        }
     };
 }
 
@@ -32,6 +40,14 @@ macro_rules! derive_functor_for_nested_functor {
                     <$inner_instance as $crate::control::structure::functor::Functor>::fmap(g, x.0),
                 )
             }
+        }
+
+        impl<T> $crate::control::structure::functor::FunctorExt for $wrapper<T>
+        where
+            T: $crate::base::value::StaticConcurrent,
+        {
+            type Wrapped = T;
+            type Instance = $instance;
         }
     };
 }

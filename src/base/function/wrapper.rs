@@ -7,7 +7,7 @@ use crate::base::hkt::TypeConstructor1;
 use crate::base::value::{StaticConcurrent, Value};
 use crate::control::context::applicative::{Applicative, ApplicativeExt};
 use crate::control::context::monad::{Monad, MonadExt};
-use crate::control::structure::functor::Functor;
+use crate::control::structure::functor::{Functor, FunctorExt};
 
 pub struct WrappedFn<T, R>(Arc<dyn Fn(T) -> R + Send + Sync + 'static>);
 
@@ -125,6 +125,15 @@ where
             g(e)
         })
     }
+}
+
+impl<E, A> FunctorExt for WrappedFn<E, A>
+where
+    E: Value,
+    A: StaticConcurrent,
+{
+    type Wrapped = A;
+    type Instance = WrappedFnInstance<E>;
 }
 
 impl<E, A> ApplicativeExt for WrappedFn<E, A>

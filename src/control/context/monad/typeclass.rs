@@ -1,4 +1,4 @@
-use crate::base::function::{ConcurrentFn, constv};
+use crate::base::function::ConcurrentFn;
 use crate::base::hkt::TypeConstructor1;
 use crate::base::value::{StaticConcurrent, Value};
 use crate::control::context::applicative::Applicative;
@@ -16,16 +16,6 @@ pub trait Monad: Applicative {
         A: Value,
         B: Value,
         G: for<'a> Value<View<'a>: ConcurrentFn<A, Output = Self::Type<B>>>;
-
-    fn then<A, B>(x: Self::Type<A>, y: Self::Type<B>) -> Self::Type<B>
-    where
-        Self: Sized,
-        A: Value,
-        B: Value,
-        Self::Type<B>: Value,
-    {
-        Self::bind(x, constv(y))
-    }
 }
 
 pub trait MonadExt {
@@ -45,18 +35,5 @@ pub trait MonadExt {
         >,
     {
         Self::Instance::bind::<Self::Wrapped, B, G>(self, g)
-    }
-
-    fn then<B>(
-        self,
-        y: <Self::Instance as TypeConstructor1>::Type<B>,
-    ) -> <Self::Instance as TypeConstructor1>::Type<B>
-    where
-        Self: Sized,
-        Self::Wrapped: Value,
-        B: Value,
-        <Self::Instance as TypeConstructor1>::Type<B>: Value,
-    {
-        Self::Instance::then::<Self::Wrapped, B>(self, y)
     }
 }

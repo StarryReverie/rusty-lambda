@@ -11,3 +11,10 @@ where
 {
     FA::Instance::fmap(g, x)
 }
+
+pub fn void<FA>(x: FA) -> <FA::Instance as TypeConstructor1>::Type<()>
+where
+    FA: FunctorExt<Wrapped: Value> + Value,
+{
+    x.void()
+}

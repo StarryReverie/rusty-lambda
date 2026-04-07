@@ -4,5 +4,5 @@ mod derive;
 mod typeclass;
 mod util;
 
-pub use typeclass::{Functor, FunctorExt};
-pub use util::fmap;
+pub use typeclass::{Functor, FunctorExt, LhsFunctorExt};
+pub use util::{fmap, void};

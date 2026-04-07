@@ -1,23 +1,30 @@
-use crate::base::function::{ConcurrentFn, Curry, WrappedFn};
+use crate::base::function::{ConcurrentFn, Curry, Curryed2Fn, WrappedFn};
 use crate::base::value::Value;
-use crate::control::context::applicative::Applicative;
+use crate::control::context::applicative::{Applicative, ApplicativeExt};
 use crate::control::structure::traversable::Traversable;
 use crate::data::list::{List, ListInstance};
 use crate::data::maybe::Maybe;
 
 impl Traversable for ListInstance {
-    fn traverse<F, A, B, G>(tag: F, map: G, container: Self::Type<A>) -> F::Type<Self::Type<B>>
+    fn traverse<F, A, B, FB, G>(map: G, container: Self::Type<A>) -> F::Type<Self::Type<B>>
     where
-        F: Applicative,
+        F: Applicative<Type<B> = FB>,
         A: Value,
         B: Value,
-        G: for<'a> Value<View<'a>: ConcurrentFn<A, Output = F::Type<B>>>,
+        FB: ApplicativeExt<Wrapped = B, Instance = F> + Value,
+        G: for<'a> Value<View<'a>: ConcurrentFn<A, Output = FB>>,
     {
         match container.decompose() {
             Maybe::Just((x, xs)) => {
                 let x = map.view().call(x);
-                let xs = Self::traverse(tag, map, xs);
-                F::apply(F::apply(F::pure(WrappedFn::curry(List::cons)), x), xs)
+                let xs = Self::traverse(map, xs);
+                F::apply::<_, _, WrappedFn<List<B>, List<B>>>(
+                    F::apply::<_, _, Curryed2Fn<B, List<B>, List<B>>>(
+                        F::pure(WrappedFn::curry(List::cons)),
+                        x,
+                    ),
+                    xs,
+                )
             }
             Maybe::Nothing => F::pure(List::empty()),
         }

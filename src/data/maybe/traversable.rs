@@ -1,16 +1,17 @@
 use crate::base::function::{ConcurrentFn, WrappedFn};
 use crate::base::value::Value;
-use crate::control::context::applicative::Applicative;
+use crate::control::context::applicative::{Applicative, ApplicativeExt};
 use crate::control::structure::traversable::Traversable;
 use crate::data::maybe::{Maybe, MaybeInstance};
 
 impl Traversable for MaybeInstance {
-    fn traverse<F, A, B, G>(_tag: F, map: G, container: Self::Type<A>) -> F::Type<Self::Type<B>>
+    fn traverse<F, A, B, FB, G>(map: G, container: Self::Type<A>) -> F::Type<Self::Type<B>>
     where
-        F: Applicative,
+        F: Applicative<Type<B> = FB>,
         A: Value,
         B: Value,
-        G: for<'a> Value<View<'a>: ConcurrentFn<A, Output = F::Type<B>>>,
+        FB: ApplicativeExt<Wrapped = B, Instance = F> + Value,
+        G: for<'a> Value<View<'a>: ConcurrentFn<A, Output = FB>>,
     {
         match container {
             Maybe::Just(x) => F::fmap(WrappedFn::from(Maybe::Just), map.view().call(x)),

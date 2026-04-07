@@ -2,34 +2,35 @@ use std::marker::PhantomData;
 
 use crate::base::function::{ConcurrentFn, WrappedFn};
 use crate::base::value::Value;
-use crate::control::context::applicative::Applicative;
+use crate::control::context::applicative::{Applicative, ApplicativeExt};
 use crate::control::structure::foldable::Foldable;
 use crate::control::structure::functor::Functor;
 
 pub trait Traversable: Functor + Foldable {
-    fn traverse<F, A, B, G>(tag: F, map: G, container: Self::Type<A>) -> F::Type<Self::Type<B>>
+    fn traverse<F, A, B, FB, G>(map: G, container: Self::Type<A>) -> F::Type<Self::Type<B>>
     where
-        F: Applicative,
+        F: Applicative<Type<B> = FB>,
         A: Value,
         B: Value,
-        G: for<'a> Value<View<'a>: ConcurrentFn<A, Output = F::Type<B>>>;
+        FB: ApplicativeExt<Wrapped = B, Instance = F> + Value,
+        G: for<'a> Value<View<'a>: ConcurrentFn<A, Output = FB>>;
 
-    fn sequence<F, A>(tag: F, contexts: Self::Type<F::Type<A>>) -> F::Type<Self::Type<A>>
+    fn sequence<F, A, FA, FTA>(contexts: Self::Type<FA>) -> FTA
     where
-        F: Applicative,
+        F: Applicative<Type<A> = FA> + Applicative<Type<Self::Type<A>> = FTA>,
         A: Value,
-        F::Type<A>: Value,
+        FA: ApplicativeExt<Wrapped = A, Instance = F> + Value,
+        FTA: ApplicativeExt<Wrapped = Self::Type<A>, Instance = F>,
     {
-        Self::traverse(tag, WrappedFn::from(|x| x), contexts)
+        Self::traverse(WrappedFn::from(|x| x), contexts)
     }
 
-    fn context<F>(tag: F) -> TraversableChain<F, Self>
+    fn context<F>(_tag: F) -> TraversableChain<F, Self>
     where
         F: Applicative,
         Self: Sized,
     {
         TraversableChain {
-            applicative_tag: tag,
             _marker: PhantomData,
         }
     }
@@ -37,8 +38,7 @@ pub trait Traversable: Functor + Foldable {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 pub struct TraversableChain<F, T> {
-    applicative_tag: F,
-    _marker: PhantomData<T>,
+    _marker: PhantomData<(F, T)>,
 }
 
 impl<F, T> TraversableChain<F, T>
@@ -46,72 +46,74 @@ where
     F: Applicative,
     T: Traversable,
 {
-    pub fn traverse<A, B, G>(self, map: G) -> MappedTraversableChain<F, T, A, B, G>
+    pub fn traverse<A, B, FB, G>(self, map: G) -> MappedTraversableChain<F, T, A, B, FB, G>
     where
         A: Value,
         B: Value,
-        G: for<'a> Value<View<'a>: ConcurrentFn<A, Output = F::Type<B>>>,
+        FB: ApplicativeExt<Wrapped = B, Instance = F> + Value,
+        G: for<'a> Value<View<'a>: ConcurrentFn<A, Output = FB>>,
     {
         MappedTraversableChain {
-            applicative_tag: self.applicative_tag,
             map,
             _marker: PhantomData,
         }
     }
 
-    pub fn sequence<A>(self, contexts: T::Type<F::Type<A>>) -> F::Type<T::Type<A>>
+    pub fn sequence<A, FA>(self, contexts: T::Type<FA>) -> F::Type<T::Type<A>>
     where
+        F: Applicative<Type<A> = FA>,
         A: Value,
-        F::Type<A>: Value,
+        FA: ApplicativeExt<Wrapped = A, Instance = F> + Value,
+        F::Type<T::Type<A>>: ApplicativeExt<Wrapped = T::Type<A>, Instance = F>,
     {
-        T::sequence(self.applicative_tag, contexts)
+        T::sequence(contexts)
     }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
-pub struct MappedTraversableChain<F, T, A, B, G> {
-    applicative_tag: F,
+pub struct MappedTraversableChain<F, T, A, B, FB, G> {
     map: G,
-    _marker: PhantomData<(T, A, B)>,
+    _marker: PhantomData<(F, T, A, B, FB)>,
 }
 
-impl<F, T, A, B, G> MappedTraversableChain<F, T, A, B, G>
+impl<F, T, A, B, FB, G> MappedTraversableChain<F, T, A, B, FB, G>
 where
-    F: Applicative,
+    F: Applicative<Type<B> = FB>,
     T: Traversable,
     A: Value,
     B: Value,
-    G: for<'a> Value<View<'a>: ConcurrentFn<A, Output = F::Type<B>>>,
+    FB: ApplicativeExt<Wrapped = B, Instance = F> + Value,
+    G: for<'a> Value<View<'a>: ConcurrentFn<A, Output = FB>>,
 {
     pub fn over(self, container: T::Type<A>) -> F::Type<T::Type<B>> {
-        T::traverse(self.applicative_tag, self.map, container)
+        T::traverse(self.map, container)
     }
 }
 
 #[cfg(test)]
 mod tests {
     use crate::data::list::{List, ListInstance};
-    use crate::data::maybe::{Maybe, MaybeInstance};
+    use crate::data::maybe::Maybe;
 
     use super::*;
 
     #[test]
     fn test_sequence() {
-        let res = ListInstance::context(MaybeInstance).sequence(List::from(vec![
+        let res = ListInstance::sequence(List::from(vec![
             Maybe::Just(1),
             Maybe::Just(2),
             Maybe::Just(3),
         ]));
         assert_eq!(res, Maybe::Just(List::from(vec![1, 2, 3])));
 
-        let res = ListInstance::context(MaybeInstance).sequence(List::from(vec![
+        let res = ListInstance::sequence(List::from(vec![
             Maybe::Just(1),
             Maybe::Nothing,
             Maybe::Just(3),
         ]));
         assert_eq!(res, Maybe::Nothing);
 
-        let res: Maybe<List<i32>> = ListInstance::context(MaybeInstance).sequence(List::empty());
+        let res: Maybe<List<i32>> = ListInstance::sequence(List::empty());
         assert_eq!(res, Maybe::Just(List::empty()));
     }
 }

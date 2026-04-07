@@ -31,21 +31,21 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::base::function::WrappedFn;
+    use crate::{base::function::WrappedFn, control::structure::functor::fmap};
 
     use super::*;
 
     #[test]
     fn test_fmap() {
         let state = State::from(|s| (s * 2, s));
-        let state = StateInstance::fmap(WrappedFn::from(|x| x + 1), state);
+        let state = fmap(WrappedFn::from(|x| x + 1), state);
         assert_eq!(State::run(&state, 3), (7, 3));
     }
 
     #[test]
     fn test_functor_identity_law() {
         let state = State::from(|s| (s + 10, s));
-        let state = StateInstance::fmap(WrappedFn::from(|x| x), state);
+        let state = fmap(WrappedFn::from(|x| x), state);
         assert_eq!(State::run(&state, 5), (15, 5));
     }
 
@@ -56,8 +56,8 @@ mod tests {
         let composed = g.clone().compose(h.clone());
 
         let state = State::from(|s| (s, s));
-        let lhs = StateInstance::fmap(composed, state.clone());
-        let rhs = StateInstance::fmap(g, StateInstance::fmap(h, state));
+        let lhs = fmap(composed, state.clone());
+        let rhs = fmap(g, fmap(h, state));
         assert_eq!(State::run(&lhs, 4), (11, 4));
         assert_eq!(State::run(&rhs, 4), (11, 4));
     }

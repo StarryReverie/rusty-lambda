@@ -29,6 +29,7 @@ where
 mod tests {
     use crate::base::function::WrappedFn;
     use crate::base::value::arc;
+    use crate::control::structure::functor::fmap;
 
     use super::*;
 
@@ -36,14 +37,14 @@ mod tests {
     fn test_fmap_just() {
         let g = |x| x + 1;
         let f = Maybe::Just(1);
-        assert_eq!(MaybeInstance::fmap(arc(g), f), Maybe::Just(2));
+        assert_eq!(fmap(arc(g), f), Maybe::Just(2));
     }
 
     #[test]
     fn test_fmap_nothing() {
         let g = |x| x + 1;
         let f: Maybe<i32> = Maybe::Nothing;
-        assert_eq!(MaybeInstance::fmap(arc(g), f), Maybe::Nothing);
+        assert_eq!(fmap(arc(g), f), Maybe::Nothing);
     }
 
     #[test]
@@ -53,7 +54,7 @@ mod tests {
         }
 
         let f = Maybe::Just(WrappedFn::from(|x: i32| x + 1));
-        match MaybeInstance::fmap(arc(g), f) {
+        match fmap(arc(g), f) {
             Maybe::Just(h) => assert_eq!(h(1), 4),
             Maybe::Nothing => unreachable!(),
         }
@@ -64,10 +65,10 @@ mod tests {
         let id = |x| x;
 
         let f = Maybe::Just(42);
-        assert_eq!(MaybeInstance::fmap(arc(id), f), Maybe::Just(42));
+        assert_eq!(fmap(arc(id), f), Maybe::Just(42));
 
         let f: Maybe<i32> = Maybe::Nothing;
-        assert_eq!(MaybeInstance::fmap(arc(id), f), Maybe::Nothing,);
+        assert_eq!(fmap(arc(id), f), Maybe::Nothing,);
     }
 
     #[test]
@@ -77,14 +78,14 @@ mod tests {
         let composed = g.compose(h);
 
         let f = Maybe::Just(4i32);
-        let lhs = MaybeInstance::fmap(composed.clone(), f);
-        let rhs = MaybeInstance::fmap(arc(g), MaybeInstance::fmap(arc(h), Maybe::Just(4i32)));
+        let lhs = fmap(composed.clone(), f);
+        let rhs = fmap(arc(g), fmap(arc(h), Maybe::Just(4i32)));
         assert_eq!(lhs, Maybe::Just(11i64));
         assert_eq!(lhs, rhs);
 
         let f: Maybe<i32> = Maybe::Nothing;
-        let lhs = MaybeInstance::fmap(composed, f);
-        let rhs = MaybeInstance::fmap(arc(g), MaybeInstance::fmap(arc(h), Maybe::Nothing));
+        let lhs = fmap(composed, f);
+        let rhs = fmap(arc(g), fmap(arc(h), Maybe::Nothing));
         assert_eq!(lhs, Maybe::Nothing);
         assert_eq!(lhs, rhs);
     }

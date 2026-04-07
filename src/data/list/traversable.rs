@@ -28,7 +28,7 @@ impl Traversable for ListInstance {
 mod tests {
     use crate::base::function::{ConcurrentFn, Curry, WrappedFn};
     use crate::control::structure::foldable::Foldable;
-    use crate::control::structure::functor::Functor;
+    use crate::control::structure::functor::fmap;
     use crate::control::structure::functor::identity::{Identity, IdentityInstance};
     use crate::data::maybe::MaybeInstance;
 
@@ -85,7 +85,7 @@ mod tests {
         let via_traverse = ListInstance::context(MaybeInstance)
             .traverse(WrappedFn::from(|x| Maybe::Just(x + 1)))
             .over(xs.clone());
-        let via_fmap_then_wrap = Maybe::Just(ListInstance::fmap(WrappedFn::from(|x| x + 1), xs));
+        let via_fmap_then_wrap = Maybe::Just(fmap(WrappedFn::from(|x| x + 1), xs));
         assert_eq!(via_traverse, via_fmap_then_wrap);
     }
 

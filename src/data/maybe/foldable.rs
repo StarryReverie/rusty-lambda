@@ -27,7 +27,7 @@ impl Foldable for MaybeInstance {
 mod tests {
     use crate::base::function::{ConcurrentFn, Curry, WrappedFn};
     use crate::control::structure::foldable::Foldable;
-    use crate::control::structure::functor::Functor;
+    use crate::control::structure::functor::fmap;
     use crate::data::list::List;
     use crate::data::maybe::{Maybe, MaybeInstance};
 
@@ -45,7 +45,7 @@ mod tests {
         let elem_map = WrappedFn::from(|x: i32| x + 1);
         let composed = to_monoid.clone().compose(elem_map.clone());
         let lhs = MaybeInstance::fold_map(composed, Maybe::Just(2));
-        let rhs = MaybeInstance::fold_map(to_monoid, MaybeInstance::fmap(elem_map, Maybe::Just(2)));
+        let rhs = MaybeInstance::fold_map(to_monoid, fmap(elem_map, Maybe::Just(2)));
         assert_eq!(lhs, rhs);
     }
 

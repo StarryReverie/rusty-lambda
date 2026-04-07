@@ -33,17 +33,18 @@ where
 mod tests {
     use crate::base::function::{ConcurrentFn, WrappedFn};
     use crate::base::value::arc;
+    use crate::control::structure::functor::fmap;
 
     use super::*;
 
     #[test]
     fn test_fmap() {
         let xs: List<i32> = List::empty();
-        let ys = ListInstance::fmap(&|x| x + 1, xs);
+        let ys = fmap(&|x| x + 1, xs);
         assert_eq!(ys, List::empty());
 
         let xs = List::from(vec![1, 2, 3]);
-        let ys = ListInstance::fmap(&|x| x + 1, xs);
+        let ys = fmap(&|x| x + 1, xs);
         let expected = List::from(vec![2, 3, 4]);
         assert_eq!(ys, expected);
     }
@@ -53,10 +54,10 @@ mod tests {
         let id = |x| x;
 
         let xs = List::from(vec![1, 2, 3]);
-        assert_eq!(ListInstance::fmap(arc(id), xs.clone()), xs);
+        assert_eq!(fmap(arc(id), xs.clone()), xs);
 
         let xs: List<i32> = List::empty();
-        assert_eq!(ListInstance::fmap(arc(id), xs), List::empty());
+        assert_eq!(fmap(arc(id), xs), List::empty());
     }
 
     #[test]
@@ -66,13 +67,13 @@ mod tests {
         let composed = (g.clone()).compose(h.clone());
 
         let xs = List::from(vec![1, 2]);
-        let lhs = ListInstance::fmap(composed.clone(), xs.clone());
-        let rhs = ListInstance::fmap(g.clone(), ListInstance::fmap(h.clone(), xs));
+        let lhs = fmap(composed.clone(), xs.clone());
+        let rhs = fmap(g.clone(), fmap(h.clone(), xs));
         assert_eq!(lhs, rhs);
 
         let xs: List<i32> = List::empty();
-        let lhs = ListInstance::fmap(composed, xs.clone());
-        let rhs = ListInstance::fmap(g, ListInstance::fmap(h, xs));
+        let lhs = fmap(composed, xs.clone());
+        let rhs = fmap(g, fmap(h, xs));
         assert_eq!(lhs, rhs);
     }
 }

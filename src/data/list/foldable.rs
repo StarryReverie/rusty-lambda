@@ -40,7 +40,7 @@ impl Foldable for ListInstance {
 mod tests {
     use crate::base::function::{ConcurrentFn, Curry, WrappedFn};
     use crate::control::structure::foldable::Foldable;
-    use crate::control::structure::functor::Functor;
+    use crate::control::structure::functor::fmap;
     use crate::data::list::List;
     use crate::data::list::ListInstance;
 
@@ -64,7 +64,7 @@ mod tests {
         let elem_map = WrappedFn::from(|x| x + 1);
         let composed = to_monoid.clone().compose(elem_map.clone());
         let lhs = ListInstance::fold_map(composed, xs.clone());
-        let rhs = ListInstance::fold_map(to_monoid, ListInstance::fmap(elem_map, xs));
+        let rhs = ListInstance::fold_map(to_monoid, fmap(elem_map, xs));
         assert_eq!(lhs, rhs);
     }
 

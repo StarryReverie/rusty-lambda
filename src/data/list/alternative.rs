@@ -29,7 +29,7 @@ where
 #[cfg(test)]
 mod tests {
     use crate::base::function::WrappedFn;
-    use crate::control::structure::functor::Functor;
+    use crate::control::structure::functor::fmap;
 
     use super::*;
 
@@ -74,15 +74,15 @@ mod tests {
         let b = List::from(vec![3, 4]);
         let f = WrappedFn::from(|x| x * 10);
 
-        let lhs = ListInstance::fmap(f.clone(), a.clone().alt(b.clone()));
-        let rhs = ListInstance::fmap(f.clone(), a).alt(ListInstance::fmap(f.clone(), b));
+        let lhs = fmap(f.clone(), a.clone().alt(b.clone()));
+        let rhs = fmap(f.clone(), a).alt(fmap(f.clone(), b));
         assert_eq!(lhs, rhs);
 
         let a = List::empty();
         let b = List::from(vec![3, 4]);
 
-        let lhs = ListInstance::fmap(f.clone(), a.clone().alt(b.clone()));
-        let rhs = ListInstance::fmap(f.clone(), a).alt(ListInstance::fmap(f, b));
+        let lhs = fmap(f.clone(), a.clone().alt(b.clone()));
+        let rhs = fmap(f.clone(), a).alt(fmap(f, b));
         assert_eq!(lhs, rhs);
     }
 

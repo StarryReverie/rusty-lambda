@@ -23,7 +23,7 @@ impl Traversable for MaybeInstance {
 mod tests {
     use crate::base::function::{Curry, WrappedFn};
     use crate::control::structure::foldable::Foldable;
-    use crate::control::structure::functor::Functor;
+    use crate::control::structure::functor::fmap;
     use crate::control::structure::functor::identity::{Identity, IdentityInstance};
 
     use super::*;
@@ -69,7 +69,7 @@ mod tests {
         let lhs = MaybeInstance::context(MaybeInstance)
             .traverse(WrappedFn::from(|x| Maybe::Just(x + 1)))
             .over(xs);
-        let rhs = MaybeInstance::fmap(WrappedFn::from(|x| Maybe::Just(x + 1)), Maybe::Just(3));
+        let rhs = fmap(WrappedFn::from(|x| Maybe::Just(x + 1)), Maybe::Just(3));
         assert_eq!(lhs, rhs);
     }
 

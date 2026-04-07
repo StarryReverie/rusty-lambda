@@ -33,7 +33,7 @@ where
 mod tests {
     use crate::base::function::WrappedFn;
     use crate::control::context::applicative::ApplicativeExt;
-    use crate::control::structure::functor::Functor;
+    use crate::control::structure::functor::fmap;
 
     use super::*;
 
@@ -77,15 +77,15 @@ mod tests {
         let f = WrappedFn::from(|x| x * 2);
         let a = Maybe::Just(1);
         let b = Maybe::Just(2);
-        let lhs = MaybeInstance::fmap(f.clone(), a.clone().alt(b.clone()));
-        let rhs = MaybeInstance::fmap(f.clone(), a).alt(MaybeInstance::fmap(f, b));
+        let lhs = fmap(f.clone(), a.clone().alt(b.clone()));
+        let rhs = fmap(f.clone(), a).alt(fmap(f, b));
         assert_eq!(lhs, rhs);
 
         let f = WrappedFn::from(|x| x * 2);
         let a = Maybe::Nothing;
         let b = Maybe::Just(2);
-        let lhs = MaybeInstance::fmap(f.clone(), a.clone().alt(b.clone()));
-        let rhs = MaybeInstance::fmap(f.clone(), a).alt(MaybeInstance::fmap(f, b));
+        let lhs = fmap(f.clone(), a.clone().alt(b.clone()));
+        let rhs = fmap(f.clone(), a).alt(fmap(f, b));
         assert_eq!(lhs, rhs);
     }
 

@@ -157,6 +157,7 @@ where
 #[cfg(test)]
 mod tests {
     use crate::base::function::{Curry, WrappedFn, compose};
+    use crate::control::structure::functor::fmap;
 
     use super::*;
 
@@ -177,7 +178,7 @@ mod tests {
     fn test_functor_identity_law() {
         let id = WrappedFn::from(|x| x);
         let reader = WrappedFn::from(|e| e + 1);
-        let result = WrappedFnInstance::fmap(id, reader);
+        let result = fmap(id, reader);
         assert_eq!(result(5), 6);
         assert_eq!(result(0), 1);
     }

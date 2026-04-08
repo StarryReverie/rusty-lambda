@@ -7,6 +7,14 @@ pub use crate::control::context::applicative::lift_a2 as lift_m2;
 pub use crate::control::context::applicative::lift_a3 as lift_m3;
 pub use crate::control::structure::functor::fmap as lift_m;
 
+pub fn ret<A, MA>(x: A) -> MA
+where
+    A: Value,
+    MA: MonadExt<Wrapped = A> + Value,
+{
+    MA::Instance::ret(x)
+}
+
 pub fn join<MMA, MA, A>(x: MMA) -> MA
 where
     MMA: MonadExt<Wrapped = MA> + Value,

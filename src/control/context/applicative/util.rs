@@ -6,6 +6,14 @@ use crate::control::structure::functor::Functor;
 
 pub use crate::control::structure::functor::fmap as lift_a;
 
+pub fn pure<A, FA>(x: A) -> FA
+where
+    A: Value,
+    FA: ApplicativeExt<Wrapped = A> + Value,
+{
+    FA::Instance::pure(x)
+}
+
 pub fn lift_a2<FA, B, C, G2, G1>(
     g: G2,
     x: FA,

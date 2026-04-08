@@ -3,4 +3,4 @@ mod typeclass;
 mod util;
 
 pub use typeclass::{Applicative, ApplicativeExt};
-pub use util::{lift_a, lift_a2, lift_a3};
+pub use util::{lift_a, lift_a2, lift_a3, pure};

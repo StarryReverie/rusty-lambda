@@ -7,7 +7,7 @@ mod util;
 use std::marker::PhantomData;
 
 pub use typeclass::{Monad, MonadExt};
-pub use util::{guard, join, lift_m, lift_m2, lift_m3, unless, when};
+pub use util::{guard, join, lift_m, lift_m2, lift_m3, ret, unless, when};
 
 use crate::base::function::{ConcurrentFn, Curry, WrappedFn};
 use crate::base::hkt::TypeConstructor1;

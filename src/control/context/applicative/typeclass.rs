@@ -19,6 +19,14 @@ pub trait ApplicativeExt {
     type Wrapped: StaticConcurrent;
     type Instance: Applicative<Type<Self::Wrapped> = Self>;
 
+    fn pure(x: Self::Wrapped) -> Self
+    where
+        Self: Sized,
+        Self::Wrapped: Value,
+    {
+        Self::Instance::pure(x)
+    }
+
     fn apply<A, B>(
         self,
         x: <Self::Instance as TypeConstructor1>::Type<A>,

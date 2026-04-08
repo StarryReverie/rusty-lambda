@@ -22,6 +22,14 @@ pub trait MonadExt {
     type Wrapped: StaticConcurrent;
     type Instance: Monad<Type<Self::Wrapped> = Self>;
 
+    fn ret(x: Self::Wrapped) -> Self
+    where
+        Self: Sized,
+        Self::Wrapped: Value,
+    {
+        Self::Instance::ret(x)
+    }
+
     fn bind<B, G>(self, g: G) -> <Self::Instance as TypeConstructor1>::Type<B>
     where
         Self: Sized,

@@ -1,5 +1,5 @@
 use crate::base::function::{ConcurrentFn, constv};
-use crate::base::value::{StaticConcurrent, Value};
+use crate::base::value::Value;
 use crate::control::context::ContextConstructor;
 
 pub trait Functor: ContextConstructor {
@@ -11,7 +11,7 @@ pub trait Functor: ContextConstructor {
 }
 
 pub trait FunctorExt {
-    type Wrapped: StaticConcurrent;
+    type Wrapped: Value;
     type Instance: Functor<Type<Self::Wrapped> = Self>;
 
     fn piped<B, G>(self, g: G) -> <Self::Instance as ContextConstructor>::Type<B>

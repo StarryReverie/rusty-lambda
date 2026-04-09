@@ -1,4 +1,4 @@
-use crate::base::value::{SimpleValue, StaticConcurrent, Value};
+use crate::base::value::{SimpleValue, Value};
 use crate::control::context::ContextConstructor;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
@@ -41,8 +41,8 @@ impl<T> From<Maybe<T>> for Option<T> {
 pub struct MaybeInstance;
 
 impl ContextConstructor for MaybeInstance {
-    type Type<A1>
-        = Maybe<A1>
+    type Type<A>
+        = Maybe<A>
     where
-        A1: StaticConcurrent;
+        A: Value;
 }

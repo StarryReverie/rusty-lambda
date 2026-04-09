@@ -1,11 +1,11 @@
-use crate::base::value::{StaticConcurrent, Value};
+use crate::base::value::Value;
 use crate::control::context::alternative::{Alternative, AlternativeExt};
 use crate::data::list::{List, ListInstance};
 
 impl Alternative for ListInstance {
     fn fallback<A>() -> Self::Type<A>
     where
-        A: StaticConcurrent,
+        A: Value,
     {
         List::empty()
     }
@@ -20,7 +20,7 @@ impl Alternative for ListInstance {
 
 impl<T> AlternativeExt for List<T>
 where
-    T: StaticConcurrent,
+    T: Value,
 {
     type Wrapped = T;
     type Instance = ListInstance;

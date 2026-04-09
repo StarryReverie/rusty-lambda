@@ -5,7 +5,7 @@ pub trait TransConstructor {
     type Type<M, A>: StaticConcurrent
     where
         M: Monad + 'static,
-        A: StaticConcurrent;
+        A: Value;
 
     type Stacked<M>: StackedMonadTrans<Transformer = Self> + 'static
     where

@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use crate::base::value::{SimpleValue, StaticConcurrent, Value};
+use crate::base::value::{SimpleValue, Value};
 use crate::control::context::ContextConstructor;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -66,10 +66,10 @@ impl<E> Default for EitherInstance<E> {
 
 impl<E> ContextConstructor for EitherInstance<E>
 where
-    E: StaticConcurrent,
+    E: Value,
 {
     type Type<A>
         = Either<E, A>
     where
-        A: StaticConcurrent;
+        A: Value;
 }

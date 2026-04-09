@@ -1,4 +1,4 @@
-use crate::base::value::{StaticConcurrent, Value};
+use crate::base::value::Value;
 use crate::control::context::alternative::{Alternative, AlternativeExt};
 use crate::control::structure::monoid::Monoid;
 use crate::control::structure::semigroup::Semigroup;
@@ -6,11 +6,11 @@ use crate::data::validation::{Validation, ValidationInstance};
 
 impl<E> Alternative for ValidationInstance<E>
 where
-    E: Monoid + StaticConcurrent,
+    E: Monoid + Value,
 {
     fn fallback<A>() -> Self::Type<A>
     where
-        A: StaticConcurrent,
+        A: Value,
     {
         Self::Type::<A>::empty()
     }
@@ -25,8 +25,8 @@ where
 
 impl<E, A> AlternativeExt for Validation<E, A>
 where
-    E: Monoid + StaticConcurrent,
-    A: StaticConcurrent,
+    E: Monoid + Value,
+    A: Value,
 {
     type Wrapped = A;
     type Instance = ValidationInstance<E>;

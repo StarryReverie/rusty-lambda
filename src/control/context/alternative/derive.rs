@@ -4,7 +4,7 @@ macro_rules! derive_alternative_for_nested_alternative {
         impl $crate::control::context::alternative::Alternative for $instance {
             fn fallback<A>() -> Self::Type<A>
             where
-                A: $crate::base::value::StaticConcurrent,
+                A: $crate::base::value::Value,
             {
                 $wrapper(
                     <$inner_instance as $crate::control::context::alternative::Alternative>::fallback(),
@@ -25,7 +25,7 @@ macro_rules! derive_alternative_for_nested_alternative {
 
         impl<T> $crate::control::context::alternative::AlternativeExt for $wrapper<T>
         where
-            T: $crate::base::value::StaticConcurrent,
+            T: $crate::base::value::Value,
         {
             type Wrapped = T;
             type Instance = $instance;

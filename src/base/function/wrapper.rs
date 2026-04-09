@@ -67,7 +67,7 @@ where
     type Type<A>
         = WrappedFn<E, A>
     where
-        A: StaticConcurrent;
+        A: Value;
 }
 
 impl<E> Functor for WrappedFnInstance<E>
@@ -130,7 +130,7 @@ where
 impl<E, A> FunctorExt for WrappedFn<E, A>
 where
     E: Value,
-    A: StaticConcurrent,
+    A: Value,
 {
     type Wrapped = A;
     type Instance = WrappedFnInstance<E>;
@@ -139,7 +139,7 @@ where
 impl<E, A> ApplicativeExt for WrappedFn<E, A>
 where
     E: Value,
-    A: StaticConcurrent,
+    A: Value,
 {
     type Wrapped = A;
     type Instance = WrappedFnInstance<E>;
@@ -148,7 +148,7 @@ where
 impl<E, A> MonadExt for WrappedFn<E, A>
 where
     E: Value,
-    A: StaticConcurrent,
+    A: Value,
 {
     type Wrapped = A;
     type Instance = WrappedFnInstance<E>;

@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use crate::base::value::{SimpleValue, StaticConcurrent, Value};
+use crate::base::value::{SimpleValue, Value};
 use crate::control::context::ContextConstructor;
 use crate::control::structure::monoid::Monoid;
 use crate::data::either::Either;
@@ -78,10 +78,10 @@ pub struct ValidationInstance<E>(PhantomData<E>);
 
 impl<E> ContextConstructor for ValidationInstance<E>
 where
-    E: StaticConcurrent,
+    E: Value,
 {
     type Type<A>
         = Validation<E, A>
     where
-        A: StaticConcurrent;
+        A: Value;
 }

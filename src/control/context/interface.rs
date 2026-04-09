@@ -1,7 +1,7 @@
-use crate::base::value::StaticConcurrent;
+use crate::base::value::Value;
 
 pub trait ContextConstructor {
-    type Type<A>: StaticConcurrent
+    type Type<A>: Value
     where
-        A: StaticConcurrent;
+        A: Value;
 }

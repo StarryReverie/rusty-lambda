@@ -1,12 +1,12 @@
 use crate::base::function::ConcurrentFn;
-use crate::base::value::{StaticConcurrent, Value};
+use crate::base::value::Value;
 use crate::control::context::applicative::{Applicative, ApplicativeExt};
 use crate::control::structure::semigroup::Semigroup;
 use crate::data::validation::{Validation, ValidationInstance};
 
 impl<E> Applicative for ValidationInstance<E>
 where
-    E: Semigroup + StaticConcurrent,
+    E: Semigroup + Value,
 {
     fn pure<A>(x: A) -> Self::Type<A>
     where
@@ -32,8 +32,8 @@ where
 
 impl<E, A> ApplicativeExt for Validation<E, A>
 where
-    E: Semigroup + StaticConcurrent,
-    A: StaticConcurrent,
+    E: Semigroup + Value,
+    A: Value,
 {
     type Wrapped = A;
     type Instance = ValidationInstance<E>;

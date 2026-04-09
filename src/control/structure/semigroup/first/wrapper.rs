@@ -1,4 +1,4 @@
-use crate::base::value::{SimpleValue, StaticConcurrent, Value};
+use crate::base::value::{SimpleValue, Value};
 use crate::control::context::ContextConstructor;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
@@ -16,10 +16,10 @@ impl<T> SimpleValue for First<T> where T: Value {}
 pub struct FirstInstance;
 
 impl ContextConstructor for FirstInstance {
-    type Type<A1>
-        = First<A1>
+    type Type<A>
+        = First<A>
     where
-        A1: StaticConcurrent;
+        A: Value;
 }
 
 crate::derive_functor_for_wrapper!(FirstInstance, First);

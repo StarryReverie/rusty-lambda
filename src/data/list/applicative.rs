@@ -1,5 +1,5 @@
 use crate::base::function::ConcurrentFn;
-use crate::base::value::{StaticConcurrent, Value};
+use crate::base::value::Value;
 use crate::control::context::applicative::{Applicative, ApplicativeExt};
 use crate::control::structure::functor::Functor;
 use crate::data::list::{List, ListInstance};
@@ -31,7 +31,7 @@ impl Applicative for ListInstance {
 
 impl<T> ApplicativeExt for List<T>
 where
-    T: StaticConcurrent,
+    T: Value,
 {
     type Wrapped = T;
     type Instance = ListInstance;

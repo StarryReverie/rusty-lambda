@@ -1,5 +1,5 @@
 use crate::base::function::ConcurrentFn;
-use crate::base::value::{StaticConcurrent, Value};
+use crate::base::value::Value;
 use crate::control::context::monad::{Monad, MonadExt};
 use crate::data::maybe::{Maybe, MaybeInstance};
 
@@ -19,7 +19,7 @@ impl Monad for MaybeInstance {
 
 impl<T> MonadExt for Maybe<T>
 where
-    T: StaticConcurrent,
+    T: Value,
 {
     type Wrapped = T;
     type Instance = MaybeInstance;

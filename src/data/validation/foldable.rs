@@ -1,13 +1,13 @@
 use std::ops::ControlFlow;
 
 use crate::base::function::ConcurrentFn;
-use crate::base::value::{StaticConcurrent, Value};
+use crate::base::value::Value;
 use crate::control::structure::foldable::Foldable;
 use crate::data::validation::{Validation, ValidationInstance};
 
 impl<E> Foldable for ValidationInstance<E>
 where
-    E: StaticConcurrent,
+    E: Value,
 {
     fn try_foldr<A, B, F, T>(accum: F, try_break: T, init: B, container: Self::Type<A>) -> B
     where

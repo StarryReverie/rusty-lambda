@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::base::value::{SimpleValue, StaticConcurrent, Value};
+use crate::base::value::{SimpleValue, Value};
 use crate::control::context::ContextConstructor;
 use crate::data::maybe::Maybe;
 
@@ -116,10 +116,10 @@ where
 pub struct ListInstance;
 
 impl ContextConstructor for ListInstance {
-    type Type<A1>
-        = List<A1>
+    type Type<A>
+        = List<A>
     where
-        A1: StaticConcurrent;
+        A: Value;
 }
 
 #[cfg(test)]

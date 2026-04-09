@@ -16,7 +16,7 @@ macro_rules! derive_monad_for_wrapper {
 
         impl<T> $crate::control::context::monad::MonadExt for $wrapper<T>
         where
-            T: $crate::base::value::StaticConcurrent,
+            T: $crate::base::value::Value,
         {
             type Wrapped = T;
             type Instance = $instance;
@@ -49,7 +49,7 @@ macro_rules! derive_monad_for_nested_monad {
 
         impl<T> $crate::control::context::monad::MonadExt for $wrapper<T>
         where
-            T: $crate::base::value::StaticConcurrent,
+            T: $crate::base::value::Value,
         {
             type Wrapped = T;
             type Instance = $instance;

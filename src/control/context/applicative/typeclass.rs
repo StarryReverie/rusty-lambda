@@ -1,5 +1,5 @@
 use crate::base::function::{ConcurrentFn, Curry, Curryed2Fn, WrappedFn};
-use crate::base::value::{StaticConcurrent, Value};
+use crate::base::value::Value;
 use crate::control::context::ContextConstructor;
 use crate::control::structure::functor::Functor;
 
@@ -16,7 +16,7 @@ pub trait Applicative: Functor {
 }
 
 pub trait ApplicativeExt {
-    type Wrapped: StaticConcurrent;
+    type Wrapped: Value;
     type Instance: Applicative<Type<Self::Wrapped> = Self>;
 
     fn pure(x: Self::Wrapped) -> Self

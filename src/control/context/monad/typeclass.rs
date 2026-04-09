@@ -1,5 +1,5 @@
 use crate::base::function::ConcurrentFn;
-use crate::base::value::{StaticConcurrent, Value};
+use crate::base::value::Value;
 use crate::control::context::ContextConstructor;
 use crate::control::context::applicative::Applicative;
 
@@ -19,7 +19,7 @@ pub trait Monad: Applicative {
 }
 
 pub trait MonadExt {
-    type Wrapped: StaticConcurrent;
+    type Wrapped: Value;
     type Instance: Monad<Type<Self::Wrapped> = Self>;
 
     fn ret(x: Self::Wrapped) -> Self

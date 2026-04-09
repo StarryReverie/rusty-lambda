@@ -1,5 +1,5 @@
 use crate::base::function::ConcurrentFn;
-use crate::base::value::{StaticConcurrent, Value};
+use crate::base::value::Value;
 use crate::control::context::monad::state::{State, StateInstance};
 use crate::control::context::monad::{Monad, MonadExt};
 
@@ -24,7 +24,7 @@ where
 impl<S, A> MonadExt for State<S, A>
 where
     S: Value,
-    A: StaticConcurrent,
+    A: Value,
 {
     type Wrapped = A;
     type Instance = StateInstance<S>;

@@ -1,11 +1,11 @@
 use crate::base::function::ConcurrentFn;
-use crate::base::value::{StaticConcurrent, Value};
+use crate::base::value::Value;
 use crate::control::structure::functor::{Functor, FunctorExt};
 use crate::data::validation::{Validation, ValidationInstance};
 
 impl<E> Functor for ValidationInstance<E>
 where
-    E: StaticConcurrent,
+    E: Value,
 {
     fn fmap<A, B, G>(g: G, fx: Self::Type<A>) -> Self::Type<B>
     where
@@ -22,8 +22,8 @@ where
 
 impl<E, A> FunctorExt for Validation<E, A>
 where
-    E: StaticConcurrent,
-    A: StaticConcurrent,
+    E: Value,
+    A: Value,
 {
     type Wrapped = A;
     type Instance = ValidationInstance<E>;

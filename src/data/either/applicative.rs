@@ -1,11 +1,11 @@
 use crate::base::function::ConcurrentFn;
-use crate::base::value::{StaticConcurrent, Value};
+use crate::base::value::Value;
 use crate::control::context::applicative::{Applicative, ApplicativeExt};
 use crate::data::either::{Either, EitherInstance};
 
 impl<E> Applicative for EitherInstance<E>
 where
-    E: StaticConcurrent,
+    E: Value,
 {
     fn pure<A>(x: A) -> Self::Type<A>
     where
@@ -29,8 +29,8 @@ where
 
 impl<E, A> ApplicativeExt for Either<E, A>
 where
-    E: StaticConcurrent,
-    A: StaticConcurrent,
+    E: Value,
+    A: Value,
 {
     type Wrapped = A;
     type Instance = EitherInstance<E>;

@@ -1,10 +1,10 @@
-use crate::base::value::{StaticConcurrent, Value};
+use crate::base::value::Value;
 use crate::control::context::applicative::Applicative;
 
 pub trait Alternative: Applicative {
     fn fallback<A>() -> Self::Type<A>
     where
-        A: StaticConcurrent;
+        A: Value;
 
     fn alt<A>(one: Self::Type<A>, another: Self::Type<A>) -> Self::Type<A>
     where
@@ -12,7 +12,7 @@ pub trait Alternative: Applicative {
 }
 
 pub trait AlternativeExt {
-    type Wrapped: StaticConcurrent;
+    type Wrapped: Value;
     type Instance: Alternative<Type<Self::Wrapped> = Self>;
 
     fn alt(self, another: Self) -> Self

@@ -1,11 +1,11 @@
 use crate::base::function::ConcurrentFn;
-use crate::base::value::{StaticConcurrent, Value};
+use crate::base::value::Value;
 use crate::control::structure::functor::{Functor, FunctorExt};
 use crate::data::either::{Either, EitherInstance};
 
 impl<E> Functor for EitherInstance<E>
 where
-    E: StaticConcurrent,
+    E: Value,
 {
     fn fmap<A, B, G>(g: G, fx: Self::Type<A>) -> Self::Type<B>
     where
@@ -22,8 +22,8 @@ where
 
 impl<E, A> FunctorExt for Either<E, A>
 where
-    E: StaticConcurrent,
-    A: StaticConcurrent,
+    E: Value,
+    A: Value,
 {
     type Wrapped = A;
     type Instance = EitherInstance<E>;

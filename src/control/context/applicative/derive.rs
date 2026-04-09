@@ -23,7 +23,7 @@ macro_rules! derive_applicative_for_wrapper {
 
         impl<T> $crate::control::context::applicative::ApplicativeExt for $wrapper<T>
         where
-            T: $crate::base::value::StaticConcurrent,
+            T: $crate::base::value::Value,
         {
             type Wrapped = T;
             type Instance = $instance;
@@ -64,7 +64,7 @@ macro_rules! derive_applicative_for_nested_applicative {
 
         impl<T> $crate::control::context::applicative::ApplicativeExt for $wrapper<T>
         where
-            T: $crate::base::value::StaticConcurrent,
+            T: $crate::base::value::Value,
         {
             type Wrapped = T;
             type Instance = $instance;

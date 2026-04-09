@@ -1,5 +1,5 @@
 use crate::base::function::ConcurrentFn;
-use crate::base::value::{StaticConcurrent, Value};
+use crate::base::value::Value;
 use crate::control::context::applicative::{Applicative, ApplicativeExt};
 use crate::data::maybe::{Maybe, MaybeInstance};
 
@@ -26,7 +26,7 @@ impl Applicative for MaybeInstance {
 
 impl<T> ApplicativeExt for Maybe<T>
 where
-    T: StaticConcurrent,
+    T: Value,
 {
     type Wrapped = T;
     type Instance = MaybeInstance;

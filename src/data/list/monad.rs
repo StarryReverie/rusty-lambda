@@ -1,5 +1,5 @@
 use crate::base::function::ConcurrentFn;
-use crate::base::value::{StaticConcurrent, Value};
+use crate::base::value::Value;
 use crate::control::context::monad::{Monad, MonadExt};
 use crate::data::list::{List, ListInstance};
 use crate::data::maybe::Maybe;
@@ -23,7 +23,7 @@ impl Monad for ListInstance {
 
 impl<T> MonadExt for List<T>
 where
-    T: StaticConcurrent,
+    T: Value,
 {
     type Wrapped = T;
     type Instance = ListInstance;

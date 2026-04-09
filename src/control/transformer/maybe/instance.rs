@@ -1,5 +1,5 @@
 use crate::base::function::{ConcurrentFn, Curry, WrappedFn};
-use crate::base::value::{StaticConcurrent, Value};
+use crate::base::value::Value;
 use crate::control::context::applicative::{Applicative, ApplicativeExt};
 use crate::control::context::monad::{Monad, MonadExt};
 use crate::control::structure::functor::{Functor, FunctorExt};
@@ -26,7 +26,7 @@ where
 impl<M, A> FunctorExt for MaybeT<M, A>
 where
     M: Functor + 'static,
-    A: StaticConcurrent,
+    A: Value,
 {
     type Wrapped = A;
     type Instance = StackedMaybeTInstance<M>;
@@ -59,7 +59,7 @@ where
 impl<M, A> ApplicativeExt for MaybeT<M, A>
 where
     M: Monad + 'static,
-    A: StaticConcurrent,
+    A: Value,
 {
     type Wrapped = A;
     type Instance = StackedMaybeTInstance<M>;
@@ -88,7 +88,7 @@ where
 impl<M, A> MonadExt for MaybeT<M, A>
 where
     M: Monad + 'static,
-    A: StaticConcurrent,
+    A: Value,
 {
     type Wrapped = A;
     type Instance = StackedMaybeTInstance<M>;

@@ -1,6 +1,6 @@
 use crate::base::function::ConcurrentFn;
-use crate::base::hkt::TypeConstructor1;
 use crate::base::value::{StaticConcurrent, Value};
+use crate::control::context::ContextConstructor;
 use crate::control::context::applicative::Applicative;
 
 pub trait Monad: Applicative {
@@ -30,7 +30,7 @@ pub trait MonadExt {
         Self::Instance::ret(x)
     }
 
-    fn bind<B, G>(self, g: G) -> <Self::Instance as TypeConstructor1>::Type<B>
+    fn bind<B, G>(self, g: G) -> <Self::Instance as ContextConstructor>::Type<B>
     where
         Self: Sized,
         Self::Wrapped: Value,
@@ -38,7 +38,7 @@ pub trait MonadExt {
         G: for<'a> Value<
             View<'a>: ConcurrentFn<
                 Self::Wrapped,
-                Output = <Self::Instance as TypeConstructor1>::Type<B>,
+                Output = <Self::Instance as ContextConstructor>::Type<B>,
             >,
         >,
     {

@@ -1,5 +1,5 @@
-use crate::base::hkt::TypeConstructor1;
 use crate::base::value::{SimpleValue, StaticConcurrent, Value};
+use crate::control::context::ContextConstructor;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 pub enum Maybe<T> {
@@ -40,7 +40,7 @@ impl<T> From<Maybe<T>> for Option<T> {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 pub struct MaybeInstance;
 
-impl TypeConstructor1 for MaybeInstance {
+impl ContextConstructor for MaybeInstance {
     type Type<A1>
         = Maybe<A1>
     where

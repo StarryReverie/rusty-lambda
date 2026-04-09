@@ -1,7 +1,7 @@
 use std::marker::PhantomData;
 
-use crate::base::hkt::TypeConstructor1;
 use crate::base::value::{SimpleValue, StaticConcurrent, Value};
+use crate::control::context::ContextConstructor;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Either<E, A> {
@@ -64,7 +64,7 @@ impl<E> Default for EitherInstance<E> {
     }
 }
 
-impl<E> TypeConstructor1 for EitherInstance<E>
+impl<E> ContextConstructor for EitherInstance<E>
 where
     E: StaticConcurrent,
 {

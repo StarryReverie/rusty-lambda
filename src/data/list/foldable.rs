@@ -1,8 +1,8 @@
 use std::ops::ControlFlow;
 
 use crate::base::function::ConcurrentFn;
-use crate::base::hkt::TypeConstructor1;
 use crate::base::value::Value;
+use crate::control::context::ContextConstructor;
 use crate::control::structure::foldable::Foldable;
 use crate::data::list::ListInstance;
 use crate::data::maybe::Maybe;
@@ -19,7 +19,7 @@ impl Foldable for ListInstance {
             accum: &impl for<'a> Value<View<'a>: ConcurrentFn<A, Output: ConcurrentFn<B, Output = B>>>,
             try_break: &impl ConcurrentFn<A, Output = ControlFlow<B, A>>,
             init: B,
-            container: <ListInstance as TypeConstructor1>::Type<A>,
+            container: <ListInstance as ContextConstructor>::Type<A>,
         ) -> B {
             match container.decompose() {
                 Maybe::Just((x, xs)) => match try_break.call(x) {

@@ -1,8 +1,8 @@
 use crate::base::function::{ConcurrentFn, constv};
-use crate::base::hkt::TypeConstructor1;
 use crate::base::value::{StaticConcurrent, Value};
+use crate::control::context::ContextConstructor;
 
-pub trait Functor: TypeConstructor1 {
+pub trait Functor: ContextConstructor {
     fn fmap<A, B, G>(g: G, x: Self::Type<A>) -> Self::Type<B>
     where
         A: Value,
@@ -14,7 +14,7 @@ pub trait FunctorExt {
     type Wrapped: StaticConcurrent;
     type Instance: Functor<Type<Self::Wrapped> = Self>;
 
-    fn piped<B, G>(self, g: G) -> <Self::Instance as TypeConstructor1>::Type<B>
+    fn piped<B, G>(self, g: G) -> <Self::Instance as ContextConstructor>::Type<B>
     where
         Self: Sized,
         Self::Wrapped: Value,
@@ -24,7 +24,7 @@ pub trait FunctorExt {
         Self::Instance::fmap::<Self::Wrapped, B, G>(g, self)
     }
 
-    fn with<B>(self, y: B) -> <Self::Instance as TypeConstructor1>::Type<B>
+    fn with<B>(self, y: B) -> <Self::Instance as ContextConstructor>::Type<B>
     where
         Self: Sized,
         Self::Wrapped: Value,
@@ -33,7 +33,7 @@ pub trait FunctorExt {
         Self::Instance::fmap::<Self::Wrapped, B, _>(constv(y), self)
     }
 
-    fn void(self) -> <Self::Instance as TypeConstructor1>::Type<()>
+    fn void(self) -> <Self::Instance as ContextConstructor>::Type<()>
     where
         Self: Sized,
         Self::Wrapped: Value,
@@ -43,7 +43,7 @@ pub trait FunctorExt {
 }
 
 pub trait LhsFunctorExt {
-    fn to<FB>(self, y: FB) -> <FB::Instance as TypeConstructor1>::Type<Self>
+    fn to<FB>(self, y: FB) -> <FB::Instance as ContextConstructor>::Type<Self>
     where
         Self: Value + Sized,
         FB: FunctorExt<Wrapped: Value> + Value,
@@ -51,12 +51,12 @@ pub trait LhsFunctorExt {
         y.with(self)
     }
 
-    fn fmap<FA, B>(self, x: FA) -> <FA::Instance as TypeConstructor1>::Type<B>
+    fn fmap<FA, B>(self, x: FA) -> <FA::Instance as ContextConstructor>::Type<B>
     where
         Self: for<'a> Value<View<'a>: ConcurrentFn<FA::Wrapped, Output = B>> + Sized,
         FA: FunctorExt<Wrapped: Value> + Value,
         B: Value,
-        <FA::Instance as TypeConstructor1>::Type<B>: Value,
+        <FA::Instance as ContextConstructor>::Type<B>: Value,
     {
         FA::Instance::fmap(self, x)
     }

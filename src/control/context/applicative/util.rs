@@ -1,6 +1,6 @@
 use crate::base::function::ConcurrentFn;
-use crate::base::hkt::TypeConstructor1;
 use crate::base::value::Value;
+use crate::control::context::ContextConstructor;
 use crate::control::context::applicative::{Applicative, ApplicativeExt};
 use crate::control::structure::functor::Functor;
 
@@ -17,8 +17,8 @@ where
 pub fn lift_a2<FA, B, C, G2, G1>(
     g: G2,
     x: FA,
-    y: <FA::Instance as TypeConstructor1>::Type<B>,
-) -> <FA::Instance as TypeConstructor1>::Type<C>
+    y: <FA::Instance as ContextConstructor>::Type<B>,
+) -> <FA::Instance as ContextConstructor>::Type<C>
 where
     FA: ApplicativeExt<Wrapped: Value> + Value,
     B: Value,
@@ -33,9 +33,9 @@ where
 pub fn lift_a3<FA, B, C, D, G3, G2, G1>(
     g: G3,
     x: FA,
-    y: <FA::Instance as TypeConstructor1>::Type<B>,
-    z: <FA::Instance as TypeConstructor1>::Type<C>,
-) -> <FA::Instance as TypeConstructor1>::Type<D>
+    y: <FA::Instance as ContextConstructor>::Type<B>,
+    z: <FA::Instance as ContextConstructor>::Type<C>,
+) -> <FA::Instance as ContextConstructor>::Type<D>
 where
     FA: ApplicativeExt<Wrapped: Value> + Value,
     B: Value,

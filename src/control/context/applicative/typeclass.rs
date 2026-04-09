@@ -1,6 +1,6 @@
 use crate::base::function::{ConcurrentFn, Curry, Curryed2Fn, WrappedFn};
-use crate::base::hkt::TypeConstructor1;
 use crate::base::value::{StaticConcurrent, Value};
+use crate::control::context::ContextConstructor;
 use crate::control::structure::functor::Functor;
 
 pub trait Applicative: Functor {
@@ -29,8 +29,8 @@ pub trait ApplicativeExt {
 
     fn apply<A, B>(
         self,
-        x: <Self::Instance as TypeConstructor1>::Type<A>,
-    ) -> <Self::Instance as TypeConstructor1>::Type<B>
+        x: <Self::Instance as ContextConstructor>::Type<A>,
+    ) -> <Self::Instance as ContextConstructor>::Type<B>
     where
         A: Value,
         B: Value,
@@ -42,13 +42,13 @@ pub trait ApplicativeExt {
 
     fn then<B>(
         self,
-        y: <Self::Instance as TypeConstructor1>::Type<B>,
-    ) -> <Self::Instance as TypeConstructor1>::Type<B>
+        y: <Self::Instance as ContextConstructor>::Type<B>,
+    ) -> <Self::Instance as ContextConstructor>::Type<B>
     where
         Self: Sized,
         Self::Wrapped: Value,
         B: Value,
-        <Self::Instance as TypeConstructor1>::Type<B>: Value,
+        <Self::Instance as ContextConstructor>::Type<B>: Value,
     {
         Self::Instance::apply::<_, _, WrappedFn<B, B>>(
             Self::Instance::fmap::<_, _, Curryed2Fn<Self::Wrapped, B, B>>(
@@ -59,12 +59,12 @@ pub trait ApplicativeExt {
         )
     }
 
-    fn before<B>(self, y: <Self::Instance as TypeConstructor1>::Type<B>) -> Self
+    fn before<B>(self, y: <Self::Instance as ContextConstructor>::Type<B>) -> Self
     where
         Self: Sized,
         Self::Wrapped: Value,
         B: Value,
-        <Self::Instance as TypeConstructor1>::Type<B>: Value,
+        <Self::Instance as ContextConstructor>::Type<B>: Value,
     {
         Self::Instance::apply::<_, _, WrappedFn<B, Self::Wrapped>>(
             Self::Instance::fmap::<_, _, Curryed2Fn<Self::Wrapped, B, Self::Wrapped>>(
@@ -77,14 +77,14 @@ pub trait ApplicativeExt {
 
     fn applied_by<B, G>(
         self,
-        g: <Self::Instance as TypeConstructor1>::Type<G>,
-    ) -> <Self::Instance as TypeConstructor1>::Type<B>
+        g: <Self::Instance as ContextConstructor>::Type<G>,
+    ) -> <Self::Instance as ContextConstructor>::Type<B>
     where
         Self: Sized,
         Self::Wrapped: Value,
         B: Value,
         G: for<'a> Value<View<'a>: ConcurrentFn<Self::Wrapped, Output = B>>,
-        <Self::Instance as TypeConstructor1>::Type<B>: Value,
+        <Self::Instance as ContextConstructor>::Type<B>: Value,
     {
         Self::Instance::apply::<_, _, WrappedFn<G, B>>(
             Self::Instance::fmap::<_, _, Curryed2Fn<Self::Wrapped, G, B>>(

@@ -1,5 +1,5 @@
-use crate::base::hkt::TypeConstructor1;
 use crate::base::value::{SimpleValue, StaticConcurrent, Value};
+use crate::control::context::ContextConstructor;
 use crate::data::maybe::{Maybe, MaybeInstance};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
@@ -16,7 +16,7 @@ impl<T> SimpleValue for Last<T> where T: Value {}
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 pub struct LastInstance;
 
-impl TypeConstructor1 for LastInstance {
+impl ContextConstructor for LastInstance {
     type Type<A1>
         = Last<A1>
     where

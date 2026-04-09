@@ -1,7 +1,7 @@
 use std::marker::PhantomData;
 
-use crate::base::hkt::TypeConstructor1;
 use crate::base::value::{SimpleValue, StaticConcurrent, Value};
+use crate::control::context::ContextConstructor;
 use crate::control::structure::monoid::Monoid;
 use crate::data::either::Either;
 
@@ -76,7 +76,7 @@ where
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 pub struct ValidationInstance<E>(PhantomData<E>);
 
-impl<E> TypeConstructor1 for ValidationInstance<E>
+impl<E> ContextConstructor for ValidationInstance<E>
 where
     E: StaticConcurrent,
 {

@@ -1,8 +1,8 @@
 use std::marker::PhantomData;
 
 use crate::base::function::WrappedFn;
-use crate::base::hkt::TypeConstructor1;
 use crate::base::value::{SimpleValue, StaticConcurrent, Value};
+use crate::control::context::ContextConstructor;
 
 pub struct State<S, A>(pub WrappedFn<S, (A, S)>);
 
@@ -49,7 +49,7 @@ where
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 pub struct StateInstance<S>(PhantomData<S>);
 
-impl<S> TypeConstructor1 for StateInstance<S>
+impl<S> ContextConstructor for StateInstance<S>
 where
     S: Value,
 {

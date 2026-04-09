@@ -1,8 +1,8 @@
 use std::ops::ControlFlow;
 
 use crate::base::function::{ConcurrentFn, Curry, WrappedFn};
-use crate::base::hkt::TypeConstructor1;
 use crate::base::value::Value;
+use crate::control::context::ContextConstructor;
 use crate::control::structure::monoid::Monoid;
 use crate::control::structure::monoid::all::All;
 use crate::control::structure::monoid::any::Any;
@@ -10,7 +10,7 @@ use crate::control::structure::semigroup::Semigroup;
 use crate::data::list::List;
 use crate::data::maybe::Maybe;
 
-pub trait Foldable: TypeConstructor1 {
+pub trait Foldable: ContextConstructor {
     fn try_foldr<A, B, F, T>(accum: F, try_break: T, init: B, container: Self::Type<A>) -> B
     where
         A: Value,

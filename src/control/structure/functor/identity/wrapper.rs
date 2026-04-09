@@ -1,5 +1,5 @@
-use crate::base::hkt::TypeConstructor1;
 use crate::base::value::{SimpleValue, StaticConcurrent, Value};
+use crate::control::context::ContextConstructor;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 pub struct Identity<T>(pub T);
@@ -15,7 +15,7 @@ impl<T> SimpleValue for Identity<T> where T: Value {}
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 pub struct IdentityInstance;
 
-impl TypeConstructor1 for IdentityInstance {
+impl ContextConstructor for IdentityInstance {
     type Type<A1>
         = Identity<A1>
     where

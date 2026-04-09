@@ -1,4 +1,4 @@
 mod instance;
 mod transformer;
 
-pub use transformer::{MaybeT, MaybeTInstance};
+pub use transformer::{MaybeT, MaybeTInstance, StackedMaybeTInstance};

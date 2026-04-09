@@ -1,12 +1,12 @@
 use crate::base::function::{ConcurrentFn, Curry, WrappedFn};
-use crate::base::value::Value;
-use crate::control::context::applicative::Applicative;
+use crate::base::value::{StaticConcurrent, Value};
+use crate::control::context::applicative::{Applicative, ApplicativeExt};
 use crate::control::context::monad::{Monad, MonadExt};
-use crate::control::structure::functor::Functor;
-use crate::control::transformer::maybe::{MaybeT, MaybeTInstance};
+use crate::control::structure::functor::{Functor, FunctorExt};
+use crate::control::transformer::maybe::{MaybeT, StackedMaybeTInstance};
 use crate::data::maybe::{Maybe, MaybeInstance};
 
-impl<M> Functor for MaybeTInstance<M>
+impl<M> Functor for StackedMaybeTInstance<M>
 where
     M: Functor + 'static,
 {
@@ -23,7 +23,16 @@ where
     }
 }
 
-impl<M> Applicative for MaybeTInstance<M>
+impl<M, A> FunctorExt for MaybeT<M, A>
+where
+    M: Functor + 'static,
+    A: StaticConcurrent,
+{
+    type Wrapped = A;
+    type Instance = StackedMaybeTInstance<M>;
+}
+
+impl<M> Applicative for StackedMaybeTInstance<M>
 where
     M: Applicative + 'static,
 {
@@ -47,7 +56,16 @@ where
     }
 }
 
-impl<M> Monad for MaybeTInstance<M>
+impl<M, A> ApplicativeExt for MaybeT<M, A>
+where
+    M: Monad + 'static,
+    A: StaticConcurrent,
+{
+    type Wrapped = A;
+    type Instance = StackedMaybeTInstance<M>;
+}
+
+impl<M> Monad for StackedMaybeTInstance<M>
 where
     M: Monad + 'static,
 {
@@ -70,14 +88,16 @@ where
 impl<M, A> MonadExt for MaybeT<M, A>
 where
     M: Monad + 'static,
-    A: Value,
+    A: StaticConcurrent,
 {
     type Wrapped = A;
-    type Instance = MaybeTInstance<M>;
+    type Instance = StackedMaybeTInstance<M>;
 }
 
 #[cfg(test)]
 mod tests {
+    use crate::control::transformer::MonadTrans;
+    use crate::control::transformer::maybe::MaybeTInstance;
     use crate::data::list::{List, ListInstance};
 
     use super::*;
@@ -92,10 +112,9 @@ mod tests {
         ]));
         let m = m.bind(WrappedFn::from(|x| {
             if x % 2 == 0 {
-                MaybeTInstance::pure(x * 2)
+                StackedMaybeTInstance::pure(x * 2)
             } else {
-                // todo!()
-                MaybeT(List::empty())
+                MaybeTInstance::lift(List::singleton(-1))
             }
         }));
         eprintln!("{m:?}");

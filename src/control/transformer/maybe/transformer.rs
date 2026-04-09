@@ -3,8 +3,7 @@ use std::marker::PhantomData;
 use crate::base::function::WrappedFn;
 use crate::base::value::{SimpleValue, Value};
 use crate::control::context::ContextConstructor;
-use crate::control::context::monad::{Monad, MonadExt};
-use crate::control::structure::functor::Functor;
+use crate::control::context::monad::Monad;
 use crate::control::transformer::{MonadTrans, StackedMonadTrans, TransConstructor};
 use crate::data::maybe::Maybe;
 
@@ -13,6 +12,16 @@ pub struct MaybeT<M, A>(pub(super) M::Type<Maybe<A>>)
 where
     M: ContextConstructor,
     A: Value;
+
+impl<M, A> MaybeT<M, A>
+where
+    M: ContextConstructor,
+    A: Value,
+{
+    pub fn run_tr(trans: Self) -> M::Type<Maybe<A>> {
+        trans.0
+    }
+}
 
 impl<M, A> Clone for MaybeT<M, A>
 where
@@ -58,13 +67,13 @@ impl TransConstructor for MaybeTInstance {
 }
 
 impl MonadTrans for MaybeTInstance {
-    fn lift<A, MA>(mx: MA) -> Self::Type<MA::Instance, A>
+    fn lift<M, A>(mx: M::Type<A>) -> Self::Type<M, A>
     where
+        M: Monad,
         A: Value,
-        MA: MonadExt<Wrapped = A> + Value,
-        Self::Stacked<MA::Instance>: Monad<Type<A> = Self::Type<MA::Instance, A>>,
+        Self::Stacked<M>: Monad<Type<A> = Self::Type<M, A>>,
     {
-        MaybeT(MA::Instance::fmap(WrappedFn::from(Maybe::Just), mx))
+        MaybeT(M::fmap(WrappedFn::from(Maybe::Just), mx))
     }
 }
 

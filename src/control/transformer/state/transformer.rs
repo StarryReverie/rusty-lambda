@@ -3,8 +3,8 @@ use std::marker::PhantomData;
 use crate::base::function::WrappedFn;
 use crate::base::value::{SimpleValue, Value};
 use crate::control::context::ContextConstructor;
-use crate::control::context::monad::{Monad, MonadExt};
-use crate::control::structure::functor::{Functor, LhsFunctorExt};
+use crate::control::context::monad::Monad;
+use crate::control::structure::functor::LhsFunctorExt;
 use crate::control::transformer::state::MonadState;
 use crate::control::transformer::{MonadTrans, StackedMonadTrans, TransConstructor};
 
@@ -87,14 +87,14 @@ impl<S> MonadTrans for StateTInstance<S>
 where
     S: Value,
 {
-    fn lift<A, MA>(mx: MA) -> Self::Type<MA::Instance, A>
+    fn lift<M, A>(mx: M::Type<A>) -> Self::Type<M, A>
     where
+        M: Monad,
         A: Value,
-        MA: MonadExt<Wrapped = A> + Value,
-        Self::Stacked<MA::Instance>: Monad<Type<A> = Self::Type<MA::Instance, A>>,
+        Self::Stacked<M>: Monad<Type<A> = Self::Type<M, A>>,
     {
         StateT(WrappedFn::from(move |s: S| {
-            MA::Instance::fmap(WrappedFn::from(move |x| (x, s.clone())), mx.clone())
+            M::fmap(WrappedFn::from(move |x| (x, s.clone())), mx.clone())
         }))
     }
 }

@@ -1,6 +1,6 @@
-use crate::base::value::Value;
+use crate::base::value::{StaticConcurrent, Value};
 
-pub trait ContextConstructor {
+pub trait ContextConstructor: Clone + StaticConcurrent {
     type Type<A>: Value
     where
         A: Value;

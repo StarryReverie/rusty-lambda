@@ -36,7 +36,7 @@ where
 
 impl<M, A> SimpleValue for MaybeT<M, A>
 where
-    M: ContextConstructor + 'static,
+    M: ContextConstructor,
     A: Value,
 {
 }
@@ -48,13 +48,13 @@ impl TransConstructor for MaybeTInstance {
     type Type<M, A>
         = MaybeT<M, A>
     where
-        M: Monad + 'static,
+        M: Monad,
         A: Value;
 
     type Stacked<M>
         = StackedMaybeTInstance<M>
     where
-        M: Monad + 'static;
+        M: Monad;
 }
 
 impl MonadTrans for MaybeTInstance {
@@ -73,7 +73,7 @@ pub struct StackedMaybeTInstance<M>(PhantomData<M>);
 
 impl<M> ContextConstructor for StackedMaybeTInstance<M>
 where
-    M: ContextConstructor + 'static,
+    M: ContextConstructor,
 {
     type Type<A>
         = MaybeT<M, A>
@@ -83,7 +83,7 @@ where
 
 impl<M> StackedMonadTrans for StackedMaybeTInstance<M>
 where
-    M: Monad + 'static,
+    M: Monad,
 {
     type Transformer = MaybeTInstance;
 }

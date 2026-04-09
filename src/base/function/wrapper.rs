@@ -57,8 +57,14 @@ impl<T, R> Clone for WrappedFn<T, R> {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[derive(Debug, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 pub struct WrappedFnInstance<T>(PhantomData<T>);
+
+impl<T> Clone for WrappedFnInstance<T> {
+    fn clone(&self) -> Self {
+        Self(PhantomData)
+    }
+}
 
 impl<E> ContextConstructor for WrappedFnInstance<E>
 where

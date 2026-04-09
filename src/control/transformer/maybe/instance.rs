@@ -8,7 +8,7 @@ use crate::data::maybe::{Maybe, MaybeInstance};
 
 impl<M> Functor for StackedMaybeTInstance<M>
 where
-    M: Functor + 'static,
+    M: Functor,
 {
     fn fmap<A, B, G>(g: G, x: Self::Type<A>) -> Self::Type<B>
     where
@@ -25,7 +25,7 @@ where
 
 impl<M, A> FunctorExt for MaybeT<M, A>
 where
-    M: Functor + 'static,
+    M: Functor,
     A: Value,
 {
     type Wrapped = A;
@@ -34,7 +34,7 @@ where
 
 impl<M> Applicative for StackedMaybeTInstance<M>
 where
-    M: Applicative + 'static,
+    M: Applicative,
 {
     fn pure<A>(x: A) -> Self::Type<A>
     where
@@ -58,7 +58,7 @@ where
 
 impl<M, A> ApplicativeExt for MaybeT<M, A>
 where
-    M: Monad + 'static,
+    M: Applicative,
     A: Value,
 {
     type Wrapped = A;
@@ -67,7 +67,7 @@ where
 
 impl<M> Monad for StackedMaybeTInstance<M>
 where
-    M: Monad + 'static,
+    M: Monad,
 {
     fn bind<A, B, G>(x: Self::Type<A>, g: G) -> Self::Type<B>
     where
@@ -87,7 +87,7 @@ where
 
 impl<M, A> MonadExt for MaybeT<M, A>
 where
-    M: Monad + 'static,
+    M: Monad,
     A: Value,
 {
     type Wrapped = A;

@@ -1,5 +1,3 @@
-pub mod state;
-
 mod derive;
 mod typeclass;
 mod util;

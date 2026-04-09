@@ -119,3 +119,98 @@ where
     type Wrapped = A;
     type Instance = StackedStateTInstance<S, M>;
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::base::function::{ConcurrentFn, Curry, WrappedFn, compose};
+    use crate::control::context::applicative::{Applicative, ApplicativeExt};
+    use crate::control::context::monad::{Monad, MonadExt};
+    use crate::control::structure::functor::fmap;
+    use crate::control::transformer::state::{State, StateInstance};
+
+    #[test]
+    fn test_functor_identity_law() {
+        let state = State::from(|s| (s + 10, s));
+        let state = fmap(WrappedFn::from(|x| x), state);
+        assert_eq!(State::run(state, 5), (15, 5));
+    }
+
+    #[test]
+    fn test_functor_composition_law() {
+        let h = WrappedFn::from(|x| x * 2);
+        let g = WrappedFn::from(|x| x + 3);
+        let composed = g.clone().compose(h.clone());
+
+        let state = State::from(|s| (s, s));
+        let lhs = fmap(composed, state.clone());
+        let rhs = fmap(g, fmap(h, state));
+        assert_eq!(State::run(lhs, 4), (11, 4));
+        assert_eq!(State::run(rhs, 4), (11, 4));
+    }
+
+    #[test]
+    fn test_applicative_identity_law() {
+        let state = StateInstance::pure(WrappedFn::from(|x| x)).apply(State::from(|s| (s + 10, s)));
+        assert_eq!(State::run(state, 5), (15, 5));
+    }
+
+    #[test]
+    fn test_applicative_homomorphism_law() {
+        let h = WrappedFn::from(|x| x * 2);
+        let lhs = StateInstance::pure(h.clone()).apply(StateInstance::pure(3));
+        let rhs = StateInstance::pure(h(3));
+        assert_eq!(State::run(lhs, 99), State::run(rhs, 99));
+    }
+
+    #[test]
+    fn test_applicative_interchange_law() {
+        let h = State::from(|s| (WrappedFn::from(move |x| x + s), s));
+        let x = 5;
+
+        let lhs = h.clone().apply(StateInstance::pure(x));
+        let rhs = StateInstance::pure(WrappedFn::from(move |g: WrappedFn<i32, i32>| g(x))).apply(h);
+        assert_eq!(State::run(lhs.clone(), 3), State::run(rhs.clone(), 3));
+        assert_eq!(State::run(lhs, 10), State::run(rhs, 10));
+    }
+
+    #[test]
+    fn test_applicative_composition_law() {
+        let g = State::from(|s| (WrappedFn::from(move |x| x * s), s));
+        let h = State::from(|s| (WrappedFn::from(move |x| x + s), s));
+        let composed = StateInstance::pure(WrappedFn::curry(compose))
+            .apply(g.clone())
+            .apply(h.clone());
+
+        let x = StateInstance::pure(4);
+        let lhs = composed.apply(x.clone());
+        let rhs = g.apply(h.apply(x));
+        assert_eq!(State::run(lhs.clone(), 3), State::run(rhs.clone(), 3));
+        assert_eq!(State::run(lhs, 10), State::run(rhs, 10));
+    }
+
+    #[test]
+    fn test_monad_left_identity_law() {
+        let g = WrappedFn::from(|x| State::from(move |s| (x * 2, s + 1)));
+        let lhs = StateInstance::ret(3).bind(g.clone());
+        let rhs = g(3);
+        assert_eq!(State::run(lhs, 10), State::run(rhs, 10));
+    }
+
+    #[test]
+    fn test_monad_right_identity_law() {
+        let m = State::from(|s| (s + 5, s * 2)).bind(WrappedFn::from(|x| StateInstance::ret(x)));
+        assert_eq!(State::run(m, 3), (8, 6));
+    }
+
+    #[test]
+    fn test_monad_associativity_law() {
+        let g = WrappedFn::from(|x| State::from(move |s| (x + 1, s + 10)));
+        let h = WrappedFn::from(|x| State::from(move |s| (x * 2, s * 3)));
+
+        let m = State::from(|s| (s, s));
+        let lhs = m.clone().bind(g.clone()).bind(h.clone());
+        let rhs = m.bind(WrappedFn::from(move |x| g(x).bind(h.clone())));
+        assert_eq!(State::run(lhs.clone(), 5), State::run(rhs, 5));
+        assert_eq!(State::run(lhs, 5), ((5 + 1) * 2, (5 + 10) * 3));
+    }
+}

@@ -33,6 +33,18 @@ where
     }
 }
 
+impl<S, M, A, F> From<F> for StateT<S, M, A>
+where
+    S: Value,
+    M: Monad,
+    A: Value,
+    F: Into<WrappedFn<S, (A, S)>>,
+{
+    fn from(func: F) -> Self {
+        StackedStateTInstance::state(func)
+    }
+}
+
 impl<S, M, A> Clone for StateT<S, M, A>
 where
     S: Value,

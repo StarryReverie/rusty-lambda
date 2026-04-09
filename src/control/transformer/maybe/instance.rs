@@ -10,7 +10,7 @@ impl<M> Functor for StackedMaybeTInstance<M>
 where
     M: Functor,
 {
-    fn fmap<A, B, G>(g: G, x: Self::Type<A>) -> Self::Type<B>
+    fn fmap<A, B, G>(g: G, fx: Self::Type<A>) -> Self::Type<B>
     where
         A: Value,
         B: Value,
@@ -18,7 +18,7 @@ where
     {
         MaybeT(M::fmap(
             WrappedFn::from(move |x| MaybeInstance::fmap(g.clone(), x)),
-            x.0,
+            fx.0,
         ))
     }
 }
@@ -34,7 +34,7 @@ where
 
 impl<M> Applicative for StackedMaybeTInstance<M>
 where
-    M: Applicative,
+    M: Monad,
 {
     fn pure<A>(x: A) -> Self::Type<A>
     where
@@ -43,22 +43,31 @@ where
         MaybeT(M::pure(MaybeInstance::pure(x)))
     }
 
-    fn apply<A, B, G>(g: Self::Type<G>, x: Self::Type<A>) -> Self::Type<B>
+    fn apply<A, B, G>(fg: Self::Type<G>, fx: Self::Type<A>) -> Self::Type<B>
     where
         A: Value,
         B: Value,
         G: for<'a> Value<View<'a>: ConcurrentFn<A, Output = B>>,
     {
-        MaybeT(M::apply(
-            M::fmap(WrappedFn::curry(MaybeInstance::apply), g.0),
-            x.0,
+        MaybeT(M::bind(
+            fg.0,
+            WrappedFn::from(move |g: Maybe<G>| match g {
+                Maybe::Just(g) => M::fmap(
+                    WrappedFn::from(move |x| match x {
+                        Maybe::Just(x) => Maybe::Just(g.view().call(x)),
+                        Maybe::Nothing => Maybe::Nothing,
+                    }),
+                    fx.0.clone(),
+                ),
+                Maybe::Nothing => M::pure(Maybe::Nothing),
+            }),
         ))
     }
 }
 
 impl<M, A> ApplicativeExt for MaybeT<M, A>
 where
-    M: Applicative,
+    M: Monad,
     A: Value,
 {
     type Wrapped = A;
@@ -69,14 +78,14 @@ impl<M> Monad for StackedMaybeTInstance<M>
 where
     M: Monad,
 {
-    fn bind<A, B, G>(x: Self::Type<A>, g: G) -> Self::Type<B>
+    fn bind<A, B, G>(mx: Self::Type<A>, g: G) -> Self::Type<B>
     where
         A: Value,
         B: Value,
         G: for<'a> Value<View<'a>: ConcurrentFn<A, Output = Self::Type<B>>>,
     {
         MaybeT(M::bind(
-            x.0,
+            mx.0,
             WrappedFn::from(move |x| match x {
                 Maybe::Just(x) => g.view().call(x).0,
                 Maybe::Nothing => M::pure(Maybe::Nothing),

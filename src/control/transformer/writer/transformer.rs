@@ -4,7 +4,10 @@ use crate::base::function::WrappedFn;
 use crate::base::value::{SimpleValue, Value};
 use crate::control::context::ContextConstructor;
 use crate::control::context::applicative::Applicative;
+use crate::control::context::monad::Monad;
 use crate::control::structure::functor::Functor;
+use crate::control::structure::monoid::Monoid;
+use crate::control::transformer::{MonadTrans, StackedMonadTrans, TransConstructor};
 
 pub struct WriterT<W, M, A>(M::Type<(A, W)>)
 where
@@ -85,6 +88,36 @@ where
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 pub struct WriterTInstance<W>(PhantomData<W>);
 
+impl<W> TransConstructor for WriterTInstance<W>
+where
+    W: Monoid + Value,
+{
+    type Type<M, A>
+        = WriterT<W, M, A>
+    where
+        M: Monad,
+        A: Value;
+
+    type Stacked<M>
+        = StackedWriterTInstance<W, M>
+    where
+        M: Monad;
+}
+
+impl<W> MonadTrans for WriterTInstance<W>
+where
+    W: Monoid + Value,
+{
+    fn lift<M, A>(mx: M::Type<A>) -> Self::Type<M, A>
+    where
+        M: Monad,
+        A: Value,
+        Self::Stacked<M>: Monad<Type<A> = Self::Type<M, A>>,
+    {
+        WriterT::new(M::fmap(WrappedFn::from(|x| (x, W::empty())), mx))
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 pub struct StackedWriterTInstance<W, M>(PhantomData<(W, M)>);
 
@@ -97,4 +130,12 @@ where
         = WriterT<W, M, A>
     where
         A: Value;
+}
+
+impl<W, M> StackedMonadTrans for StackedWriterTInstance<W, M>
+where
+    W: Monoid + Value,
+    M: Monad,
+{
+    type Transformer = WriterTInstance<W>;
 }

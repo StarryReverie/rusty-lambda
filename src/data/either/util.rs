@@ -23,10 +23,10 @@ where
     A: Value,
     B: Value,
 {
-    xs.bind(WrappedFn::from(|x| match x {
+    xs.bind(&|x| match x {
         Either::Left(x) => List::singleton(x),
         Either::Right(_) => List::empty(),
-    }))
+    })
 }
 
 pub fn rights<A, B>(xs: List<Either<A, B>>) -> List<B>
@@ -34,10 +34,10 @@ where
     A: Value,
     B: Value,
 {
-    xs.bind(WrappedFn::from(|x| match x {
+    xs.bind(&|x| match x {
         Either::Left(_) => List::empty(),
         Either::Right(x) => List::singleton(x),
-    }))
+    })
 }
 
 pub fn is_left<A, B>(x: impl Borrow<Either<A, B>>) -> bool {

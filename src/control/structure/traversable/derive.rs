@@ -14,7 +14,7 @@ macro_rules! derive_traversable_for_wrapper {
                     >,
             {
                 F::fmap(
-                    $crate::base::function::WrappedFn::from(|x| $wrapper(x)),
+                    &(|x| $wrapper(x)),
                     $crate::base::function::ConcurrentFn::call(&map.view(), container.0),
                 )
             }
@@ -41,7 +41,7 @@ macro_rules! derive_traversable_for_nested_traversable {
                 >,
             {
                 F::fmap(
-                    $crate::base::function::WrappedFn::from(|x| $wrapper(x)),
+                    &(|x| $wrapper(x)),
                     <$inner_instance as $crate::control::structure::traversable::Traversable>::traverse(
                         map, container.0,
                     ),

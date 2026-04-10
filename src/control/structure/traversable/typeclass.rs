@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use crate::base::function::{ConcurrentFn, WrappedFn};
+use crate::base::function::ConcurrentFn;
 use crate::base::value::Value;
 use crate::control::context::applicative::{Applicative, ApplicativeExt};
 use crate::control::structure::foldable::Foldable;
@@ -22,7 +22,7 @@ pub trait Traversable: Functor + Foldable {
         FA: ApplicativeExt<Wrapped = A, Instance = F> + Value,
         FTA: ApplicativeExt<Wrapped = Self::Type<A>, Instance = F>,
     {
-        Self::traverse(WrappedFn::from(|x| x), contexts)
+        Self::traverse(&(|x| x), contexts)
     }
 
     fn context<F>(_tag: F) -> TraversableChain<F, Self>

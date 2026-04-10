@@ -1,6 +1,5 @@
 use std::marker::PhantomData;
 
-use crate::base::function::WrappedFn;
 use crate::base::value::{SimpleValue, Value};
 use crate::control::context::ContextConstructor;
 use crate::control::context::applicative::Applicative;
@@ -37,11 +36,11 @@ where
     A: Value,
 {
     pub fn eval_tr(trans: Self) -> M::Type<A> {
-        M::fmap(WrappedFn::from(|(x, _)| x), Self::run_tr(trans))
+        M::fmap(&(|(x, _)| x), Self::run_tr(trans))
     }
 
     pub fn exec_tr(trans: Self) -> M::Type<W> {
-        M::fmap(WrappedFn::from(|(_, l)| l), Self::run_tr(trans))
+        M::fmap(&(|(_, l)| l), Self::run_tr(trans))
     }
 }
 
@@ -114,7 +113,7 @@ where
         A: Value,
         Self::Stacked<M>: Monad<Type<A> = Self::Type<M, A>>,
     {
-        WriterT::new(M::fmap(WrappedFn::from(|x| (x, W::empty())), mx))
+        WriterT::new(M::fmap(&|x| (x, W::empty()), mx))
     }
 }
 

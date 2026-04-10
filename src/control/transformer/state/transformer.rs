@@ -44,11 +44,11 @@ where
     }
 
     pub fn eval_tr(trans: impl Borrow<Self>, state: S) -> M::Type<A> {
-        M::fmap(WrappedFn::from(|(x, _)| x), Self::run_tr(trans, state))
+        M::fmap(&(|(x, _)| x), Self::run_tr(trans, state))
     }
 
     pub fn exec_tr(trans: impl Borrow<Self>, state: S) -> M::Type<S> {
-        M::fmap(WrappedFn::from(|(_, s)| s), Self::run_tr(trans, state))
+        M::fmap(&(|(_, s)| s), Self::run_tr(trans, state))
     }
 }
 

@@ -4,8 +4,10 @@ use std::marker::PhantomData;
 use crate::base::function::{WrappedFn, WrappedFnInstance};
 use crate::base::value::{SimpleValue, Value};
 use crate::control::context::ContextConstructor;
+use crate::control::context::applicative::Applicative;
 use crate::control::context::monad::Monad;
 use crate::control::structure::functor::Functor;
+use crate::control::transformer::{MonadTrans, StackedMonadTrans, TransConstructor};
 
 pub struct ReaderT<R, M, A>(pub(super) WrappedFn<R, M::Type<A>>)
 where
@@ -76,6 +78,36 @@ where
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 pub struct ReaderTInstance<R>(PhantomData<R>);
 
+impl<R> TransConstructor for ReaderTInstance<R>
+where
+    R: Value,
+{
+    type Type<M, A>
+        = ReaderT<R, M, A>
+    where
+        M: Monad,
+        A: Value;
+
+    type Stacked<M>
+        = StackedReaderTInstance<R, M>
+    where
+        M: Monad;
+}
+
+impl<R> MonadTrans for ReaderTInstance<R>
+where
+    R: Value,
+{
+    fn lift<M, A>(mx: M::Type<A>) -> Self::Type<M, A>
+    where
+        M: Monad,
+        A: Value,
+        Self::Stacked<M>: Monad<Type<A> = Self::Type<M, A>>,
+    {
+        ReaderT(WrappedFnInstance::pure(mx))
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 pub struct StackedReaderTInstance<R, M>(PhantomData<(R, M)>);
 
@@ -88,4 +120,12 @@ where
         = ReaderT<R, M, A>
     where
         A: Value;
+}
+
+impl<R, M> StackedMonadTrans for StackedReaderTInstance<R, M>
+where
+    R: Value,
+    M: Monad,
+{
+    type Transformer = ReaderTInstance<R>;
 }

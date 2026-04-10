@@ -1,4 +1,4 @@
-use crate::base::function::{ConcurrentFn, Curry, WrappedFn};
+use crate::base::function::{ConcurrentFn, WrappedFn};
 use crate::base::value::Value;
 use crate::control::context::applicative::{Applicative, ApplicativeExt};
 use crate::control::context::monad::{Monad, MonadExt};

@@ -1,3 +1,4 @@
+use std::borrow::Borrow;
 use std::marker::PhantomData;
 
 use crate::base::function::WrappedFn;
@@ -17,31 +18,49 @@ where
 impl<S, M, A> StateT<S, M, A>
 where
     S: Value,
-    M: Monad,
+    M: ContextConstructor,
     A: Value,
 {
-    pub fn run_tr(trans: Self, state: S) -> M::Type<(A, S)> {
-        (trans.0)(state)
+    pub fn new(inner: WrappedFn<S, M::Type<(A, S)>>) -> Self {
+        Self(inner)
     }
 
-    pub fn eval_tr(trans: Self, state: S) -> M::Type<A> {
-        M::fmap(WrappedFn::from(|(x, _)| x), Self::run_tr(trans, state))
-    }
-
-    pub fn exec_tr(trans: Self, state: S) -> M::Type<S> {
-        M::fmap(WrappedFn::from(|(_, s)| s), Self::run_tr(trans, state))
+    pub fn run_tr(trans: impl Borrow<Self>, state: S) -> M::Type<(A, S)> {
+        (trans.borrow().0)(state)
     }
 }
 
-impl<S, M, A, F> From<F> for StateT<S, M, A>
+impl<S, M, A> StateT<S, M, A>
 where
     S: Value,
     M: Monad,
     A: Value,
-    F: Into<WrappedFn<S, (A, S)>>,
 {
-    fn from(func: F) -> Self {
-        StackedStateTInstance::state(func)
+    pub fn state<G>(run: G) -> Self
+    where
+        G: Into<WrappedFn<S, (A, S)>>,
+    {
+        StackedStateTInstance::state(run)
+    }
+
+    pub fn eval_tr(trans: impl Borrow<Self>, state: S) -> M::Type<A> {
+        M::fmap(WrappedFn::from(|(x, _)| x), Self::run_tr(trans, state))
+    }
+
+    pub fn exec_tr(trans: impl Borrow<Self>, state: S) -> M::Type<S> {
+        M::fmap(WrappedFn::from(|(_, s)| s), Self::run_tr(trans, state))
+    }
+}
+
+impl<S, M, A, G> From<G> for StateT<S, M, A>
+where
+    S: Value,
+    M: Monad,
+    A: Value,
+    G: Into<WrappedFn<S, (A, S)>>,
+{
+    fn from(func: G) -> Self {
+        Self::state(func)
     }
 }
 

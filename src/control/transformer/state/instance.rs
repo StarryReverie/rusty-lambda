@@ -59,12 +59,12 @@ where
         G: for<'a> Value<View<'a>: ConcurrentFn<A, Output = B>>,
     {
         StateT(WrappedFn::from(move |s: S| {
-            let mg = StateT::run_tr(smg.clone(), s);
+            let mg = StateT::run_tr(&smg, s);
             let smx = smx.clone();
             M::bind(
                 mg,
                 WrappedFn::from(move |(g, s): (G, S)| {
-                    let mx = StateT::run_tr(smx.clone(), s);
+                    let mx = StateT::run_tr(&smx, s);
                     M::fmap(
                         WrappedFn::from(move |(x, s): (A, S)| (g.view().call(x), s)),
                         mx,
@@ -97,7 +97,7 @@ where
         G: for<'a> Value<View<'a>: ConcurrentFn<A, Output = Self::Type<B>>>,
     {
         StateT(WrappedFn::from(move |s: S| {
-            let mx = StateT::run_tr(smx.clone(), s);
+            let mx = StateT::run_tr(&smx, s);
             let g = g.clone();
             M::bind(
                 mx,
@@ -169,8 +169,8 @@ mod tests {
 
         let lhs = h.clone().apply(StateInstance::pure(x));
         let rhs = StateInstance::pure(WrappedFn::from(move |g: WrappedFn<i32, i32>| g(x))).apply(h);
-        assert_eq!(State::run(lhs.clone(), 3), State::run(rhs.clone(), 3));
-        assert_eq!(State::run(lhs, 10), State::run(rhs, 10));
+        assert_eq!(State::run(&lhs, 3), State::run(&rhs, 3));
+        assert_eq!(State::run(&lhs, 10), State::run(&rhs, 10));
     }
 
     #[test]
@@ -184,8 +184,8 @@ mod tests {
         let x = StateInstance::pure(4);
         let lhs = composed.apply(x.clone());
         let rhs = g.apply(h.apply(x));
-        assert_eq!(State::run(lhs.clone(), 3), State::run(rhs.clone(), 3));
-        assert_eq!(State::run(lhs, 10), State::run(rhs, 10));
+        assert_eq!(State::run(&lhs, 3), State::run(&rhs, 3));
+        assert_eq!(State::run(&lhs, 10), State::run(&rhs, 10));
     }
 
     #[test]
@@ -210,7 +210,7 @@ mod tests {
         let m = State::from(|s| (s, s));
         let lhs = m.clone().bind(g.clone()).bind(h.clone());
         let rhs = m.bind(WrappedFn::from(move |x| g(x).bind(h.clone())));
-        assert_eq!(State::run(lhs.clone(), 5), State::run(rhs, 5));
-        assert_eq!(State::run(lhs, 5), ((5 + 1) * 2, (5 + 10) * 3));
+        assert_eq!(State::run(&lhs, 5), State::run(&rhs, 5));
+        assert_eq!(State::run(&lhs, 5), ((5 + 1) * 2, (5 + 10) * 3));
     }
 }

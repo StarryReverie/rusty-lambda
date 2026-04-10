@@ -3,6 +3,7 @@ use std::marker::PhantomData;
 use crate::base::function::WrappedFn;
 use crate::base::value::{SimpleValue, Value};
 use crate::control::context::ContextConstructor;
+use crate::control::context::applicative::Applicative;
 use crate::control::context::monad::Monad;
 use crate::control::transformer::{MonadTrans, StackedMonadTrans, TransConstructor};
 use crate::data::maybe::Maybe;
@@ -18,8 +19,32 @@ where
     M: ContextConstructor,
     A: Value,
 {
+    pub fn new(inner: M::Type<Maybe<A>>) -> Self {
+        Self(inner)
+    }
+
     pub fn run_tr(trans: Self) -> M::Type<Maybe<A>> {
         trans.0
+    }
+}
+
+impl<M, A> MaybeT<M, A>
+where
+    M: Applicative,
+    A: Value,
+{
+    pub fn maybe(value: Maybe<A>) -> Self {
+        Self(M::pure(value))
+    }
+}
+
+impl<M, A> From<Maybe<A>> for MaybeT<M, A>
+where
+    M: Applicative,
+    A: Value,
+{
+    fn from(value: Maybe<A>) -> Self {
+        Self::maybe(value)
     }
 }
 
@@ -30,16 +55,6 @@ where
 {
     fn clone(&self) -> Self {
         Self(self.0.clone())
-    }
-}
-
-impl<M, A> MaybeT<M, A>
-where
-    M: ContextConstructor,
-    A: Value,
-{
-    pub fn run(trans: Self) -> M::Type<Maybe<A>> {
-        trans.0
     }
 }
 

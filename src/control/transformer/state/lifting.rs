@@ -3,6 +3,7 @@ use crate::base::value::Value;
 use crate::control::transformer::MonadTrans;
 use crate::control::transformer::reader::MonadReader;
 use crate::control::transformer::state::{StackedStateTInstance, StateT, StateTInstance};
+use crate::control::transformer::writer::MonadWriter;
 
 impl<S, M> MonadReader for StackedStateTInstance<S, M>
 where
@@ -22,6 +23,46 @@ where
     {
         StateT::new(WrappedFn::from(move |state| {
             M::local(localize.clone(), StateT::run_tr(&context, state))
+        }))
+    }
+}
+
+impl<S, M> MonadWriter for StackedStateTInstance<S, M>
+where
+    S: Value,
+    M: MonadWriter,
+{
+    type Log = M::Log;
+
+    fn writer<A>(entries: (A, Self::Log)) -> Self::Type<A>
+    where
+        A: Value,
+    {
+        StateTInstance::lift(M::writer(entries))
+    }
+
+    fn listen<A>(context: Self::Type<A>) -> Self::Type<(A, Self::Log)>
+    where
+        A: Value,
+    {
+        StateT::new(WrappedFn::from(move |state| {
+            M::fmap(
+                &(|((x, state), log)| ((x, log), state)),
+                M::listen(StateT::run_tr(&context, state)),
+            )
+        }))
+    }
+
+    fn pass<A, G>(context: Self::Type<(A, G)>) -> Self::Type<A>
+    where
+        A: Value,
+        G: for<'a> Value<View<'a>: ConcurrentFn<Self::Log, Output = Self::Log>>,
+    {
+        StateT::new(WrappedFn::from(move |state| {
+            M::pass(M::fmap(
+                &(|((x, map), state)| ((x, state), map)),
+                StateT::run_tr(&context, state),
+            ))
         }))
     }
 }

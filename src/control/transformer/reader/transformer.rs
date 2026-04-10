@@ -1,12 +1,12 @@
 use std::borrow::Borrow;
 use std::marker::PhantomData;
 
-use crate::base::function::{WrappedFn, WrappedFnInstance};
+use crate::base::function::{ConcurrentFn, WrappedFn, WrappedFnInstance};
 use crate::base::value::{SimpleValue, Value};
 use crate::control::context::ContextConstructor;
 use crate::control::context::applicative::Applicative;
 use crate::control::context::monad::Monad;
-use crate::control::structure::functor::Functor;
+use crate::control::transformer::reader::MonadReader;
 use crate::control::transformer::{MonadTrans, StackedMonadTrans, TransConstructor};
 
 pub struct ReaderT<R, M, A>(pub(super) WrappedFn<R, M::Type<A>>)
@@ -38,10 +38,7 @@ where
     where
         G: Into<WrappedFn<R, A>>,
     {
-        Self::new(WrappedFnInstance::fmap(
-            WrappedFn::from(M::pure),
-            read.into(),
-        ))
+        StackedReaderTInstance::reader(read.into())
     }
 }
 
@@ -53,7 +50,7 @@ where
     G: Into<WrappedFn<R, A>>,
 {
     fn from(read: G) -> Self {
-        Self::reader(read)
+        StackedReaderTInstance::reader(read.into())
     }
 }
 
@@ -128,4 +125,26 @@ where
     M: Monad,
 {
     type Transformer = ReaderTInstance<R>;
+}
+
+impl<R, M> MonadReader for StackedReaderTInstance<R, M>
+where
+    R: Value,
+    M: Monad,
+{
+    type Environment = R;
+
+    fn ask() -> Self::Type<Self::Environment> {
+        ReaderT(WrappedFn::from(|env| M::pure(env)))
+    }
+
+    fn local<A, G>(localize: G, context: Self::Type<A>) -> Self::Type<A>
+    where
+        A: Value,
+        G: for<'a> Value<View<'a>: ConcurrentFn<Self::Environment, Output = Self::Environment>>,
+    {
+        ReaderT(WrappedFn::from(move |env| {
+            ReaderT::run_tr(&context, localize.view().call(env))
+        }))
+    }
 }

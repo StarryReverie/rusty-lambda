@@ -5,7 +5,6 @@ use crate::base::function::WrappedFn;
 use crate::base::value::{SimpleValue, Value};
 use crate::control::context::ContextConstructor;
 use crate::control::context::monad::Monad;
-use crate::control::structure::functor::LhsFunctorExt;
 use crate::control::transformer::state::MonadState;
 use crate::control::transformer::{MonadTrans, StackedMonadTrans, TransConstructor};
 
@@ -138,20 +137,4 @@ where
     M: Monad,
 {
     type Transformer = StateTInstance<S>;
-}
-
-impl<S, M> MonadState for StackedStateTInstance<S, M>
-where
-    S: Value,
-    M: Monad,
-{
-    type State = S;
-
-    fn state<A, G>(run: G) -> Self::Type<A>
-    where
-        A: Value,
-        G: Into<WrappedFn<Self::State, (A, Self::State)>>,
-    {
-        StateT(WrappedFn::from(M::pure).fmap(run.into()))
-    }
 }

@@ -1,4 +1,4 @@
-use crate::base::function::{ConcurrentFn, WrappedFn};
+use crate::base::function::ConcurrentFn;
 use crate::base::value::Value;
 use crate::control::context::applicative::{Applicative, ApplicativeExt};
 use crate::control::structure::traversable::Traversable;
@@ -14,7 +14,7 @@ impl Traversable for MaybeInstance {
         G: for<'a> Value<View<'a>: ConcurrentFn<A, Output = FB>>,
     {
         match container {
-            Maybe::Just(x) => F::fmap(WrappedFn::from(Maybe::Just), map.view().call(x)),
+            Maybe::Just(x) => F::fmap(&Maybe::Just, map.view().call(x)),
             Maybe::Nothing => F::pure(Maybe::Nothing),
         }
     }

@@ -1,6 +1,5 @@
 use std::marker::PhantomData;
 
-use crate::base::function::WrappedFn;
 use crate::base::value::{SimpleValue, Value};
 use crate::control::context::ContextConstructor;
 use crate::control::context::applicative::Applicative;
@@ -88,7 +87,7 @@ impl MonadTrans for MaybeTInstance {
         A: Value,
         Self::Stacked<M>: Monad<Type<A> = Self::Type<M, A>>,
     {
-        MaybeT(M::fmap(WrappedFn::from(Maybe::Just), mx))
+        MaybeT(M::fmap(&Maybe::Just, mx))
     }
 }
 

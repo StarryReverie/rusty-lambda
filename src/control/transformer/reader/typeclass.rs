@@ -1,6 +1,7 @@
 use crate::base::function::{ConcurrentFn, WrappedFn, WrappedFnInstance, id};
 use crate::base::value::Value;
 use crate::control::context::monad::Monad;
+use crate::control::transformer::reader::{ReaderT, StackedReaderTInstance};
 
 pub trait MonadReader: Monad {
     type Environment: Value;
@@ -37,5 +38,27 @@ where
         G: for<'a> Value<View<'a>: ConcurrentFn<Self::Environment, Output = Self::Environment>>,
     {
         WrappedFn::from(move |env| context(localize.view().call(env)))
+    }
+}
+
+impl<R, M> MonadReader for StackedReaderTInstance<R, M>
+where
+    R: Value,
+    M: Monad,
+{
+    type Environment = R;
+
+    fn ask() -> Self::Type<Self::Environment> {
+        ReaderT(WrappedFn::from(|env| M::pure(env)))
+    }
+
+    fn local<A, G>(localize: G, context: Self::Type<A>) -> Self::Type<A>
+    where
+        A: Value,
+        G: for<'a> Value<View<'a>: ConcurrentFn<Self::Environment, Output = Self::Environment>>,
+    {
+        ReaderT(WrappedFn::from(move |env| {
+            ReaderT::run_tr(&context, localize.view().call(env))
+        }))
     }
 }

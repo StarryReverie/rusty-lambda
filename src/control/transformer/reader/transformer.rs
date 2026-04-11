@@ -1,7 +1,7 @@
 use std::borrow::Borrow;
 use std::marker::PhantomData;
 
-use crate::base::function::{ConcurrentFn, WrappedFn, WrappedFnInstance};
+use crate::base::function::{WrappedFn, WrappedFnInstance};
 use crate::base::value::{SimpleValue, Value};
 use crate::control::context::ContextConstructor;
 use crate::control::context::applicative::Applicative;
@@ -125,26 +125,4 @@ where
     M: Monad,
 {
     type Transformer = ReaderTInstance<R>;
-}
-
-impl<R, M> MonadReader for StackedReaderTInstance<R, M>
-where
-    R: Value,
-    M: Monad,
-{
-    type Environment = R;
-
-    fn ask() -> Self::Type<Self::Environment> {
-        ReaderT(WrappedFn::from(|env| M::pure(env)))
-    }
-
-    fn local<A, G>(localize: G, context: Self::Type<A>) -> Self::Type<A>
-    where
-        A: Value,
-        G: for<'a> Value<View<'a>: ConcurrentFn<Self::Environment, Output = Self::Environment>>,
-    {
-        ReaderT(WrappedFn::from(move |env| {
-            ReaderT::run_tr(&context, localize.view().call(env))
-        }))
-    }
 }

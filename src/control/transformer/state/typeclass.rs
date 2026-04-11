@@ -1,6 +1,8 @@
 use crate::base::function::{ConcurrentFn, WrappedFn};
 use crate::base::value::Value;
 use crate::control::context::monad::Monad;
+use crate::control::structure::functor::LhsFunctorExt;
+use crate::control::transformer::state::{StackedStateTInstance, StateT};
 
 pub trait MonadState: Monad {
     type State: Value;
@@ -31,5 +33,21 @@ pub trait MonadState: Monad {
         G: for<'a> Value<View<'a>: ConcurrentFn<Self::State, Output = Self::State>>,
     {
         Self::state(move |s| ((), map.view().call(s)))
+    }
+}
+
+impl<S, M> MonadState for StackedStateTInstance<S, M>
+where
+    S: Value,
+    M: Monad,
+{
+    type State = S;
+
+    fn state<A, G>(run: G) -> Self::Type<A>
+    where
+        A: Value,
+        G: Into<WrappedFn<Self::State, (A, Self::State)>>,
+    {
+        StateT::new((M::pure).fmap(run.into()))
     }
 }

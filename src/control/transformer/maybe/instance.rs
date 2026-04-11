@@ -16,9 +16,9 @@ where
         B: Value,
         G: for<'a> Value<View<'a>: ConcurrentFn<A, Output = B>>,
     {
-        MaybeT(M::fmap(
+        MaybeT::new(M::fmap(
             WrappedFn::from(move |x| MaybeInstance::fmap(g.clone(), x)),
-            fx.0,
+            MaybeT::run_tr(fx),
         ))
     }
 }
@@ -40,7 +40,7 @@ where
     where
         A: Value,
     {
-        MaybeT(M::pure(MaybeInstance::pure(x)))
+        MaybeT::new(M::pure(MaybeInstance::pure(x)))
     }
 
     fn apply<A, B, G>(fg: Self::Type<G>, fx: Self::Type<A>) -> Self::Type<B>
@@ -49,15 +49,15 @@ where
         B: Value,
         G: for<'a> Value<View<'a>: ConcurrentFn<A, Output = B>>,
     {
-        MaybeT(M::bind(
-            fg.0,
+        MaybeT::new(M::bind(
+            MaybeT::run_tr(fg),
             WrappedFn::from(move |g: Maybe<G>| match g {
                 Maybe::Just(g) => M::fmap(
                     WrappedFn::from(move |x| match x {
                         Maybe::Just(x) => Maybe::Just(g.view().call(x)),
                         Maybe::Nothing => Maybe::Nothing,
                     }),
-                    fx.0.clone(),
+                    MaybeT::run_tr(fx.clone()),
                 ),
                 Maybe::Nothing => M::pure(Maybe::Nothing),
             }),
@@ -84,10 +84,10 @@ where
         B: Value,
         G: for<'a> Value<View<'a>: ConcurrentFn<A, Output = Self::Type<B>>>,
     {
-        MaybeT(M::bind(
-            mx.0,
+        MaybeT::new(M::bind(
+            MaybeT::run_tr(mx),
             WrappedFn::from(move |x| match x {
-                Maybe::Just(x) => g.view().call(x).0,
+                Maybe::Just(x) => MaybeT::run_tr(g.view().call(x)),
                 Maybe::Nothing => M::pure(Maybe::Nothing),
             }),
         ))
@@ -101,31 +101,4 @@ where
 {
     type Wrapped = A;
     type Instance = StackedMaybeTInstance<M>;
-}
-
-#[cfg(test)]
-mod tests {
-    use crate::control::transformer::MonadTrans;
-    use crate::control::transformer::maybe::MaybeTInstance;
-    use crate::data::list::{List, ListInstance};
-
-    use super::*;
-
-    #[test]
-    fn test_monad_transformer() {
-        let m = MaybeT::<ListInstance, _>(List::from(vec![
-            Maybe::Just(1),
-            Maybe::Just(2),
-            Maybe::Just(3),
-            Maybe::Just(4),
-        ]));
-        let m = m.bind(WrappedFn::from(|x| {
-            if x % 2 == 0 {
-                StackedMaybeTInstance::pure(x * 2)
-            } else {
-                MaybeTInstance::lift(List::singleton(-1))
-            }
-        }));
-        eprintln!("{m:?}");
-    }
 }

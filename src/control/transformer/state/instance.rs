@@ -1,4 +1,4 @@
-use crate::base::function::{ConcurrentFn, WrappedFn, WrappedFnInstance};
+use crate::base::function::{ConcurrentFn, WrappedFn};
 use crate::base::value::Value;
 use crate::control::context::applicative::{Applicative, ApplicativeExt};
 use crate::control::context::monad::{Monad, MonadExt};
@@ -17,16 +17,11 @@ where
         B: Value,
         G: for<'a> Value<View<'a>: ConcurrentFn<A, Output = B>>,
     {
-        StateT(WrappedFnInstance::fmap(
-            WrappedFn::from(move |mx| {
-                let g = g.clone();
-                M::fmap(
-                    WrappedFn::from(move |(x, s): (A, S)| (g.view().call(x), s)),
-                    mx,
-                )
-            }),
-            fx.0,
-        ))
+        StateT::new(WrappedFn::from(move |state| {
+            let mx = StateT::run_tr(&fx, state);
+            let g = g.clone();
+            M::fmap(WrappedFn::from(move |(x, s)| (g.view().call(x), s)), mx)
+        }))
     }
 }
 
@@ -49,7 +44,7 @@ where
     where
         A: Value,
     {
-        StateT(WrappedFn::from(move |s| M::pure((x.clone(), s))))
+        StateT::new(WrappedFn::from(move |s| M::pure((x.clone(), s))))
     }
 
     fn apply<A, B, G>(smg: Self::Type<G>, smx: Self::Type<A>) -> Self::Type<B>
@@ -58,7 +53,7 @@ where
         B: Value,
         G: for<'a> Value<View<'a>: ConcurrentFn<A, Output = B>>,
     {
-        StateT(WrappedFn::from(move |s: S| {
+        StateT::new(WrappedFn::from(move |s: S| {
             let mg = StateT::run_tr(&smg, s);
             let smx = smx.clone();
             M::bind(
@@ -96,7 +91,7 @@ where
         B: Value,
         G: for<'a> Value<View<'a>: ConcurrentFn<A, Output = Self::Type<B>>>,
     {
-        StateT(WrappedFn::from(move |s: S| {
+        StateT::new(WrappedFn::from(move |s: S| {
             let mx = StateT::run_tr(&smx, s);
             let g = g.clone();
             M::bind(

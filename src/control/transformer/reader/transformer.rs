@@ -9,7 +9,7 @@ use crate::control::context::monad::Monad;
 use crate::control::transformer::reader::MonadReader;
 use crate::control::transformer::{MonadTrans, StackedMonadTrans, TransConstructor};
 
-pub struct ReaderT<R, M, A>(pub(super) WrappedFn<R, M::Type<A>>)
+pub struct ReaderT<R, M, A>(WrappedFn<R, M::Type<A>>)
 where
     M: ContextConstructor,
     A: Value;
@@ -60,7 +60,7 @@ where
     A: Value,
 {
     fn clone(&self) -> Self {
-        Self(self.0.clone())
+        Self::new(self.0.clone())
     }
 }
 
@@ -101,7 +101,7 @@ where
         A: Value,
         Self::Stacked<M>: Monad<Type<A> = Self::Type<M, A>>,
     {
-        ReaderT(WrappedFnInstance::pure(mx))
+        ReaderT::new(WrappedFnInstance::pure(mx))
     }
 }
 

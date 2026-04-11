@@ -8,7 +8,7 @@ use crate::control::transformer::{MonadTrans, StackedMonadTrans, TransConstructo
 use crate::data::maybe::Maybe;
 
 #[derive(Debug, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
-pub struct MaybeT<M, A>(pub(super) M::Type<Maybe<A>>)
+pub struct MaybeT<M, A>(M::Type<Maybe<A>>)
 where
     M: ContextConstructor,
     A: Value;
@@ -33,7 +33,7 @@ where
     A: Value,
 {
     pub fn maybe(value: Maybe<A>) -> Self {
-        Self(M::pure(value))
+        Self::new(M::pure(value))
     }
 }
 
@@ -53,7 +53,7 @@ where
     A: Value,
 {
     fn clone(&self) -> Self {
-        Self(self.0.clone())
+        Self::new(self.0.clone())
     }
 }
 
@@ -87,7 +87,7 @@ impl MonadTrans for MaybeTInstance {
         A: Value,
         Self::Stacked<M>: Monad<Type<A> = Self::Type<M, A>>,
     {
-        MaybeT(M::fmap(&Maybe::Just, mx))
+        MaybeT::new(M::fmap(&Maybe::Just, mx))
     }
 }
 

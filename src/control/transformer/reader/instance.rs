@@ -16,7 +16,7 @@ where
         B: Value,
         G: for<'a> Value<View<'a>: ConcurrentFn<A, Output = B>>,
     {
-        ReaderT(WrappedFn::from(move |env| {
+        ReaderT::new(WrappedFn::from(move |env| {
             let x = ReaderT::run_tr(&fx, env);
             let g = g.clone();
             M::fmap(WrappedFn::from(move |x| g.view().call(x)), x)
@@ -43,7 +43,7 @@ where
     where
         A: Value,
     {
-        ReaderT(WrappedFnInstance::pure(M::pure(x)))
+        ReaderT::new(WrappedFnInstance::pure(M::pure(x)))
     }
 
     fn apply<A, B, G>(fg: Self::Type<G>, fx: Self::Type<A>) -> Self::Type<B>
@@ -52,7 +52,7 @@ where
         B: Value,
         G: for<'a> Value<View<'a>: ConcurrentFn<A, Output = B>>,
     {
-        ReaderT(WrappedFn::from(move |env: R| {
+        ReaderT::new(WrappedFn::from(move |env: R| {
             let g = ReaderT::run_tr(&fg, env.clone());
             let x = ReaderT::run_tr(&fx, env);
             M::apply(g, x)
@@ -81,7 +81,7 @@ where
         B: Value,
         G: for<'a> Value<View<'a>: ConcurrentFn<A, Output = Self::Type<B>>>,
     {
-        ReaderT(WrappedFn::from(move |env: R| {
+        ReaderT::new(WrappedFn::from(move |env: R| {
             let x = ReaderT::run_tr(&mx, env.clone());
             let g = g.clone();
             M::bind(

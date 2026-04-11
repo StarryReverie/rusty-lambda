@@ -8,7 +8,7 @@ use crate::control::context::monad::Monad;
 use crate::control::transformer::state::MonadState;
 use crate::control::transformer::{MonadTrans, StackedMonadTrans, TransConstructor};
 
-pub struct StateT<S, M, A>(pub(super) WrappedFn<S, M::Type<(A, S)>>)
+pub struct StateT<S, M, A>(WrappedFn<S, M::Type<(A, S)>>)
 where
     S: Value,
     M: ContextConstructor,
@@ -70,7 +70,7 @@ where
     A: Value,
 {
     fn clone(&self) -> Self {
-        Self(self.0.clone())
+        Self::new(self.0.clone())
     }
 }
 
@@ -111,7 +111,7 @@ where
         A: Value,
         Self::Stacked<M>: Monad<Type<A> = Self::Type<M, A>>,
     {
-        StateT(WrappedFn::from(move |s: S| {
+        StateT::new(WrappedFn::from(move |s: S| {
             M::fmap(WrappedFn::from(move |x| (x, s.clone())), mx.clone())
         }))
     }

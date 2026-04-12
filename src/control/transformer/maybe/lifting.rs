@@ -1,11 +1,37 @@
 use crate::base::function::{ConcurrentFn, WrappedFn, id};
 use crate::base::value::Value;
 use crate::control::transformer::MonadTrans;
+use crate::control::transformer::except::MonadExcept;
 use crate::control::transformer::maybe::{MaybeT, MaybeTInstance, StackedMaybeTInstance};
 use crate::control::transformer::reader::MonadReader;
 use crate::control::transformer::state::MonadState;
 use crate::control::transformer::writer::MonadWriter;
 use crate::data::maybe::Maybe;
+
+impl<M> MonadExcept for StackedMaybeTInstance<M>
+where
+    M: MonadExcept,
+{
+    type Error = M::Error;
+
+    fn throw_error<A>(error: Self::Error) -> Self::Type<A>
+    where
+        A: Value,
+    {
+        MaybeTInstance::lift(M::throw_error(error))
+    }
+
+    fn catch_error<A, G>(fallible: Self::Type<A>, handler: G) -> Self::Type<A>
+    where
+        A: Value,
+        G: for<'a> Value<View<'a>: ConcurrentFn<Self::Error, Output = Self::Type<A>>>,
+    {
+        MaybeT::new(M::catch_error(
+            MaybeT::run_tr(fallible),
+            WrappedFn::from(move |error| MaybeT::run_tr(handler.view().call(error))),
+        ))
+    }
+}
 
 impl<M> MonadReader for StackedMaybeTInstance<M>
 where

@@ -2,9 +2,36 @@ use crate::base::function::{ConcurrentFn, WrappedFn};
 use crate::base::value::Value;
 use crate::control::structure::monoid::Monoid;
 use crate::control::transformer::MonadTrans;
+use crate::control::transformer::except::MonadExcept;
 use crate::control::transformer::reader::MonadReader;
 use crate::control::transformer::state::MonadState;
 use crate::control::transformer::writer::{StackedWriterTInstance, WriterT, WriterTInstance};
+
+impl<W, M> MonadExcept for StackedWriterTInstance<W, M>
+where
+    W: Monoid + Value,
+    M: MonadExcept,
+{
+    type Error = M::Error;
+
+    fn throw_error<A>(error: Self::Error) -> Self::Type<A>
+    where
+        A: Value,
+    {
+        WriterTInstance::lift(M::throw_error(error))
+    }
+
+    fn catch_error<A, G>(fallible: Self::Type<A>, handler: G) -> Self::Type<A>
+    where
+        A: Value,
+        G: for<'a> Value<View<'a>: ConcurrentFn<Self::Error, Output = Self::Type<A>>>,
+    {
+        WriterT::new(M::catch_error(
+            WriterT::run_tr(fallible),
+            WrappedFn::from(move |error| WriterT::run_tr(handler.view().call(error))),
+        ))
+    }
+}
 
 impl<W, M> MonadReader for StackedWriterTInstance<W, M>
 where

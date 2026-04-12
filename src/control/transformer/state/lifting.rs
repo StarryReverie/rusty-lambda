@@ -1,9 +1,41 @@
 use crate::base::function::{ConcurrentFn, WrappedFn};
 use crate::base::value::Value;
 use crate::control::transformer::MonadTrans;
+use crate::control::transformer::except::MonadExcept;
 use crate::control::transformer::reader::MonadReader;
 use crate::control::transformer::state::{StackedStateTInstance, StateT, StateTInstance};
 use crate::control::transformer::writer::MonadWriter;
+
+impl<S, M> MonadExcept for StackedStateTInstance<S, M>
+where
+    S: Value,
+    M: MonadExcept,
+{
+    type Error = M::Error;
+
+    fn throw_error<A>(error: Self::Error) -> Self::Type<A>
+    where
+        A: Value,
+    {
+        StateTInstance::lift(M::throw_error(error))
+    }
+
+    fn catch_error<A, G>(fallible: Self::Type<A>, handler: G) -> Self::Type<A>
+    where
+        A: Value,
+        G: for<'a> Value<View<'a>: ConcurrentFn<Self::Error, Output = Self::Type<A>>>,
+    {
+        StateT::new(WrappedFn::from(move |state: S| {
+            let handler = handler.clone();
+            M::catch_error(
+                StateT::run_tr(&fallible, state.clone()),
+                WrappedFn::from(move |error| {
+                    StateT::run_tr(handler.view().call(error), state.clone())
+                }),
+            )
+        }))
+    }
+}
 
 impl<S, M> MonadReader for StackedStateTInstance<S, M>
 where

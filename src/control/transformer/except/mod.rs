@@ -1,4 +1,5 @@
 mod instance;
+mod lifting;
 mod transformer;
 mod wrapper;
 

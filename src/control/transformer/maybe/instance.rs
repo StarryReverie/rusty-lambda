@@ -1,4 +1,4 @@
-use crate::base::function::{ConcurrentFn, WrappedFn};
+use crate::base::function::{ConcurrentFn, Curry, WrappedFn};
 use crate::base::value::Value;
 use crate::control::context::applicative::{Applicative, ApplicativeExt};
 use crate::control::context::monad::{Monad, MonadExt};
@@ -53,10 +53,7 @@ where
             MaybeT::run_tr(fg),
             WrappedFn::from(move |g: Maybe<G>| match g {
                 Maybe::Just(g) => M::fmap(
-                    WrappedFn::from(move |x| match x {
-                        Maybe::Just(x) => Maybe::Just(g.view().call(x)),
-                        Maybe::Nothing => Maybe::Nothing,
-                    }),
+                    WrappedFn::curry(MaybeInstance::fmap)(g),
                     MaybeT::run_tr(fx.clone()),
                 ),
                 Maybe::Nothing => M::pure(Maybe::Nothing),

@@ -3,6 +3,8 @@ use std::marker::PhantomData;
 use crate::base::value::{SimpleValue, Value};
 use crate::control::context::ContextConstructor;
 use crate::control::context::applicative::Applicative;
+use crate::control::context::monad::Monad;
+use crate::control::transformer::{MonadTrans, StackedMonadTrans, TransConstructor};
 use crate::data::either::Either;
 
 #[derive(Debug, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
@@ -71,6 +73,36 @@ where
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 pub struct ExceptTInstance<E>(PhantomData<E>);
 
+impl<E> TransConstructor for ExceptTInstance<E>
+where
+    E: Value,
+{
+    type Type<M, A>
+        = ExceptT<E, M, A>
+    where
+        M: Monad,
+        A: Value;
+
+    type Stacked<M>
+        = StackedExceptTInstance<E, M>
+    where
+        M: Monad;
+}
+
+impl<E> MonadTrans for ExceptTInstance<E>
+where
+    E: Value,
+{
+    fn lift<M, A>(mx: M::Type<A>) -> Self::Type<M, A>
+    where
+        M: Monad,
+        A: Value,
+        Self::Stacked<M>: Monad<Type<A> = Self::Type<M, A>>,
+    {
+        ExceptT::new(M::fmap(&Either::Right, mx))
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 pub struct StackedExceptTInstance<E, M>(PhantomData<(E, M)>);
 
@@ -83,4 +115,12 @@ where
         = ExceptT<E, M, A>
     where
         A: Value;
+}
+
+impl<E, M> StackedMonadTrans for StackedExceptTInstance<E, M>
+where
+    E: Value,
+    M: Monad,
+{
+    type Transformer = ExceptTInstance<E>;
 }

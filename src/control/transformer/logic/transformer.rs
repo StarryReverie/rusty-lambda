@@ -2,8 +2,8 @@
 
 use std::marker::PhantomData;
 
+use crate::base::computation::Thunk;
 use crate::base::function::WrappedFn;
-use crate::base::lazy::Thunk;
 use crate::base::value::{SimpleValue, Value};
 use crate::control::context::ContextConstructor;
 use crate::control::context::applicative::Applicative;
@@ -26,7 +26,7 @@ where
     }
 
     pub fn decompose(&self) -> M::Type<Maybe<(A, Self)>> {
-        self.0.force().clone()
+        Thunk::force(&self.0).clone()
     }
 }
 

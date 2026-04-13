@@ -6,27 +6,66 @@ use std::sync::{Arc, LazyLock};
 use crate::base::value::StaticConcurrent;
 
 #[derive(Debug)]
-pub struct Thunk<T>(Arc<LazyLock<T, Box<dyn FnOnce() -> T + Send + Sync + 'static>>>);
+pub struct Thunk<T>(Arc<ThunkInner<T>>);
+
+#[derive(Debug)]
+enum ThunkInner<T> {
+    Evaluated(T),
+    Deferred(LazyLock<Thunk<T>, Box<dyn FnOnce() -> Thunk<T> + Send + Sync + 'static>>),
+}
 
 impl<T> Thunk<T> {
-    pub fn immediate(value: T) -> Self
-    where
-        T: StaticConcurrent,
-    {
-        Self::lazy(move || value)
+    pub fn immediate(value: T) -> Self {
+        Self(Arc::new(ThunkInner::Evaluated(value)))
     }
 
     pub fn lazy<F>(eval: F) -> Self
     where
         F: FnOnce() -> T + StaticConcurrent,
     {
-        Self(Arc::new(LazyLock::new(Box::new(eval))))
+        Self::lazy_monadic(move || Self::immediate(eval()))
+    }
+
+    pub fn lazy_monadic<F>(eval: F) -> Self
+    where
+        F: FnOnce() -> Thunk<T> + StaticConcurrent,
+    {
+        let inner = ThunkInner::Deferred(LazyLock::new(Box::new(eval)));
+        Self(Arc::new(inner))
     }
 
     pub fn force(&self) -> &T {
-        self.0.as_ref()
+        match self.0.as_ref() {
+            ThunkInner::Evaluated(value) => value,
+            ThunkInner::Deferred(eval) => eval.force(),
+        }
+    }
+
+    pub fn extract(&self) -> T
+    where
+        T: Clone,
+    {
+        self.force().clone()
+    }
+
+    pub fn map<U, F>(thunk: Self, func: F) -> Thunk<U>
+    where
+        T: StaticConcurrent,
+        F: FnOnce(&T) -> U + StaticConcurrent,
+    {
+        Thunk::lazy(move || func(thunk.force()))
+    }
+
+    pub fn with<U, F>(thunk: Self, func: F) -> Thunk<U>
+    where
+        T: StaticConcurrent,
+        F: FnOnce(&T) -> Thunk<U> + StaticConcurrent,
+    {
+        Thunk::lazy_monadic(move || func(thunk.force()))
     }
 }
+
+impl<T: Clone> Thunk<T> {}
 
 impl<T> Clone for Thunk<T> {
     fn clone(&self) -> Self {
@@ -56,7 +95,7 @@ impl<T: Ord> Ord for Thunk<T> {
 
 impl<T: Hash> Hash for Thunk<T> {
     fn hash<H: Hasher>(&self, state: &mut H) {
-        self.0.hash(state);
+        self.force().hash(state);
     }
 }
 
@@ -66,9 +105,9 @@ impl<T: Default + StaticConcurrent> Default for Thunk<T> {
     }
 }
 
-impl<T, F: FnOnce() -> T + StaticConcurrent> From<F> for Thunk<T> {
-    fn from(eval: F) -> Self {
-        Self::lazy(eval)
+impl<T> From<T> for Thunk<T> {
+    fn from(value: T) -> Self {
+        Self::immediate(value)
     }
 }
 

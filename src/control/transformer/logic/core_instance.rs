@@ -1,6 +1,7 @@
 use crate::base::computation::Thunk;
 use crate::base::function::{ConcurrentFn, WrappedFn};
 use crate::base::value::Value;
+use crate::control::context::alternative::{Alternative, AlternativeExt};
 use crate::control::context::applicative::{Applicative, ApplicativeExt};
 use crate::control::context::monad::{Monad, MonadExt};
 use crate::control::structure::functor::{Functor, FunctorExt};
@@ -99,6 +100,34 @@ where
 }
 
 impl<M, A> MonadExt for LogicT<M, A>
+where
+    M: Monad,
+    A: Value,
+{
+    type Wrapped = A;
+    type Instance = StackedLogicTInstance<M>;
+}
+
+impl<M> Alternative for StackedLogicTInstance<M>
+where
+    M: Monad,
+{
+    fn fallback<A>() -> Self::Type<A>
+    where
+        A: Value,
+    {
+        LogicT::empty()
+    }
+
+    fn alt<A>(one: Self::Type<A>, another: Self::Type<A>) -> Self::Type<A>
+    where
+        A: Value,
+    {
+        one.append(another)
+    }
+}
+
+impl<M, A> AlternativeExt for LogicT<M, A>
 where
     M: Monad,
     A: Value,

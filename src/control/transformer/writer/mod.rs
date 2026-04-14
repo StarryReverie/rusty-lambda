@@ -1,4 +1,5 @@
 mod core_instance;
+mod delegated_instance;
 mod lifting_instance;
 mod transformer;
 mod typeclass;

@@ -1,8 +1,10 @@
 use crate::base::function::{ConcurrentFn, Curry, WrappedFn};
 use crate::base::value::Value;
+use crate::control::context::alternative::Alternative;
 use crate::control::context::applicative::{Applicative, ApplicativeExt};
 use crate::control::context::monad::{Monad, MonadExt};
 use crate::control::structure::functor::{Functor, FunctorExt};
+use crate::control::structure::monoid::Monoid;
 use crate::control::transformer::except::ExceptT;
 use crate::control::transformer::except::StackedExceptTInstance;
 use crate::data::either::{Either, EitherInstance};
@@ -105,4 +107,36 @@ where
 {
     type Wrapped = A;
     type Instance = StackedExceptTInstance<E, M>;
+}
+
+impl<E, M> Alternative for StackedExceptTInstance<E, M>
+where
+    E: Monoid + Value,
+    M: Monad,
+{
+    fn fallback<A>() -> Self::Type<A>
+    where
+        A: Value,
+    {
+        ExceptT::except(Either::Left(E::empty()))
+    }
+
+    fn alt<A>(one: Self::Type<A>, another: Self::Type<A>) -> Self::Type<A>
+    where
+        A: Value,
+    {
+        ExceptT::new(M::bind(
+            ExceptT::run_tr(one),
+            WrappedFn::from(move |one: Either<E, A>| match one {
+                Either::Right(one) => M::pure(Either::Right(one)),
+                Either::Left(e1) => M::fmap(
+                    WrappedFn::from(move |another| match another {
+                        Either::Left(e2) => Either::Left(e1.clone().associate(e2)),
+                        right => right,
+                    }),
+                    ExceptT::run_tr(another.clone()),
+                ),
+            }),
+        ))
+    }
 }

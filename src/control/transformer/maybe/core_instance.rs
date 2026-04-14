@@ -1,5 +1,6 @@
 use crate::base::function::{ConcurrentFn, Curry, WrappedFn};
 use crate::base::value::Value;
+use crate::control::context::alternative::{Alternative, AlternativeExt};
 use crate::control::context::applicative::{Applicative, ApplicativeExt};
 use crate::control::context::monad::{Monad, MonadExt};
 use crate::control::structure::functor::{Functor, FunctorExt};
@@ -51,7 +52,7 @@ where
     {
         MaybeT::new(M::bind(
             MaybeT::run_tr(fg),
-            WrappedFn::from(move |g: Maybe<G>| match g {
+            WrappedFn::from(move |g| match g {
                 Maybe::Just(g) => M::fmap(
                     WrappedFn::curry(MaybeInstance::fmap)(g),
                     MaybeT::run_tr(fx.clone()),
@@ -92,6 +93,40 @@ where
 }
 
 impl<M, A> MonadExt for MaybeT<M, A>
+where
+    M: Monad,
+    A: Value,
+{
+    type Wrapped = A;
+    type Instance = StackedMaybeTInstance<M>;
+}
+
+impl<M> Alternative for StackedMaybeTInstance<M>
+where
+    M: Monad,
+{
+    fn fallback<A>() -> Self::Type<A>
+    where
+        A: Value,
+    {
+        MaybeT::maybe(Maybe::Nothing)
+    }
+
+    fn alt<A>(one: Self::Type<A>, another: Self::Type<A>) -> Self::Type<A>
+    where
+        A: Value,
+    {
+        MaybeT::new(M::bind(
+            MaybeT::run_tr(one),
+            WrappedFn::from(move |one| match &one {
+                Maybe::Just(_) => M::pure(one),
+                Maybe::Nothing => MaybeT::run_tr(another.clone()),
+            }),
+        ))
+    }
+}
+
+impl<M, A> AlternativeExt for MaybeT<M, A>
 where
     M: Monad,
     A: Value,

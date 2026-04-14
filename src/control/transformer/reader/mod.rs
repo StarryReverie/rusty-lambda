@@ -1,5 +1,5 @@
-mod instance;
-mod lifting;
+mod core_instance;
+mod lifting_instance;
 mod transformer;
 mod typeclass;
 mod wrapper;

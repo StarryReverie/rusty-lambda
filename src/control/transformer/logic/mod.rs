@@ -1,3 +1,3 @@
 mod transformer;
 
-pub use transformer::{LogicT, LogicTInstance, StackedLogicTInstance};
+pub use transformer::{LogicT, LogicTInstance, LogicTStep, StackedLogicTInstance};

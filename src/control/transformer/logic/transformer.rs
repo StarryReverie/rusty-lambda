@@ -1,5 +1,3 @@
-#![expect(clippy::type_complexity)]
-
 use std::marker::PhantomData;
 
 use crate::base::computation::Thunk;
@@ -10,8 +8,10 @@ use crate::control::context::applicative::Applicative;
 use crate::control::context::monad::Monad;
 use crate::data::maybe::Maybe;
 
+pub type LogicTStep<M, A> = Maybe<(A, LogicT<M, A>)>;
+
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
-pub struct LogicT<M, A>(Thunk<M::Type<Maybe<(A, LogicT<M, A>)>>>)
+pub struct LogicT<M, A>(Thunk<M::Type<LogicTStep<M, A>>>)
 where
     M: ContextConstructor,
     A: Value;
@@ -21,11 +21,11 @@ where
     M: ContextConstructor,
     A: Value,
 {
-    pub fn new(thunk: Thunk<M::Type<Maybe<(A, LogicT<M, A>)>>>) -> Self {
+    pub fn new(thunk: Thunk<M::Type<LogicTStep<M, A>>>) -> Self {
         Self(thunk)
     }
 
-    pub fn decompose(&self) -> M::Type<Maybe<(A, Self)>> {
+    pub fn decompose(&self) -> M::Type<LogicTStep<M, A>> {
         Thunk::force(&self.0).clone()
     }
 }

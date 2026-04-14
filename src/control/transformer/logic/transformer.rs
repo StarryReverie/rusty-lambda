@@ -6,6 +6,7 @@ use crate::base::value::{SimpleValue, Value};
 use crate::control::context::ContextConstructor;
 use crate::control::context::applicative::Applicative;
 use crate::control::context::monad::Monad;
+use crate::control::transformer::{MonadTrans, StackedMonadTrans, TransConstructor};
 use crate::data::maybe::Maybe;
 
 pub type LogicTStep<M, A> = Maybe<(A, LogicT<M, A>)>;
@@ -89,8 +90,51 @@ where
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 pub struct LogicTInstance;
 
+impl TransConstructor for LogicTInstance {
+    type Type<M, A>
+        = LogicT<M, A>
+    where
+        M: Monad,
+        A: Value;
+
+    type Stacked<M>
+        = StackedLogicTInstance<M>
+    where
+        M: Monad;
+}
+
+impl MonadTrans for LogicTInstance {
+    fn lift<M, A>(mx: M::Type<A>) -> Self::Type<M, A>
+    where
+        M: Monad,
+        A: Value,
+        Self::Stacked<M>: Monad<Type<A> = Self::Type<M, A>>,
+    {
+        LogicT::new(Thunk::lazy(move || {
+            M::fmap(&(|x| Maybe::Just((x, LogicT::empty()))), mx)
+        }))
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 pub struct StackedLogicTInstance<M>(PhantomData<M>);
+
+impl<M> ContextConstructor for StackedLogicTInstance<M>
+where
+    M: ContextConstructor,
+{
+    type Type<A>
+        = LogicT<M, A>
+    where
+        A: Value;
+}
+
+impl<M> StackedMonadTrans for StackedLogicTInstance<M>
+where
+    M: Monad,
+{
+    type Transformer = LogicTInstance;
+}
 
 #[cfg(test)]
 mod tests {

@@ -90,28 +90,6 @@ mod tests {
 
     #[test]
     fn test_tree_sum_cps() {
-        enum Tree {
-            Nil,
-            Node(u32, Box<Tree>, Box<Tree>),
-        }
-
-        #[rustfmt::skip]
-        fn sum_cps(
-            node: Box<Tree>,
-            cont: Box<dyn FnOnce(u32) -> Computation<u32> + Send + Sync + 'static>,
-        ) -> Computation<u32> {
-            match *node {
-                Tree::Nil => Computation::monadic(move || cont(0)),
-                Tree::Node(x, left, right) => Computation::monadic(move || {
-                    sum_cps(left, Box::new(move |ls| {
-                        sum_cps(right, Box::new(move |rs| {
-                            Computation::monadic(move || cont(ls + rs + x))
-                        }))
-                    }))
-                }),
-            }
-        }
-
         let tree = Box::new(Tree::Node(
             1,
             Box::new(Tree::Node(
@@ -128,5 +106,38 @@ mod tests {
 
         let cont = Box::new(|x| Computation::immediate(x));
         assert_eq!(sum_cps(tree, cont).eval(), 21);
+    }
+
+    #[test]
+    fn test_tree_sum_cps_no_stack_overflow() {
+        let n = 100000;
+        let tree = (1..=n).fold(Box::new(Tree::Nil), |acc, i| {
+            Box::new(Tree::Node(i, acc, Box::new(Tree::Nil)))
+        });
+
+        let cont = Box::new(|x| Computation::immediate(x));
+        assert_eq!(sum_cps(tree, cont).eval(), (1 + n) * n / 2);
+    }
+
+    enum Tree {
+        Nil,
+        Node(u64, Box<Tree>, Box<Tree>),
+    }
+
+    #[rustfmt::skip]
+    fn sum_cps(
+        node: Box<Tree>,
+        cont: Box<dyn FnOnce(u64) -> Computation<u64> + Send + Sync + 'static>,
+    ) -> Computation<u64> {
+        match *node {
+            Tree::Nil => Computation::monadic(move || cont(0)),
+            Tree::Node(x, left, right) => Computation::monadic(move || {
+                sum_cps(left, Box::new(move |ls| Computation::monadic(move || {
+                    sum_cps(right, Box::new(move |rs| Computation::monadic(move || {
+                        cont(ls + rs + x)
+                    })))
+                })))
+            }),
+        }
     }
 }

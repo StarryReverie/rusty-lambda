@@ -1,12 +1,40 @@
 use crate::base::function::{ConcurrentFn, WrappedFn};
 use crate::base::value::Value;
 use crate::control::transformer::MonadTrans;
+use crate::control::transformer::cont::MonadCont;
 use crate::control::transformer::except::MonadExcept;
 use crate::control::transformer::logic::MonadLogic;
 use crate::control::transformer::reader::{ReaderT, ReaderTInstance, StackedReaderTInstance};
 use crate::control::transformer::state::MonadState;
 use crate::control::transformer::writer::MonadWriter;
 use crate::data::maybe::Maybe;
+
+impl<R, M> MonadCont for StackedReaderTInstance<R, M>
+where
+    R: Value,
+    M: MonadCont,
+{
+    fn call_cc<A, B>(
+        suspended: WrappedFn<WrappedFn<A, Self::Type<B>>, Self::Type<A>>,
+    ) -> Self::Type<A>
+    where
+        A: Value,
+        B: Value,
+    {
+        ReaderT::new(WrappedFn::from(move |env: R| {
+            let suspended = suspended.clone();
+            M::call_cc(WrappedFn::from(move |escape: WrappedFn<A, M::Type<B>>| {
+                ReaderT::run_tr(
+                    suspended(WrappedFn::from(move |x: A| {
+                        let escape = escape.clone();
+                        ReaderT::new(WrappedFn::from(move |_| escape(x.clone())))
+                    })),
+                    env.clone(),
+                )
+            }))
+        }))
+    }
+}
 
 impl<R, M> MonadExcept for StackedReaderTInstance<R, M>
 where

@@ -1,12 +1,34 @@
 use crate::base::function::{ConcurrentFn, WrappedFn, id};
 use crate::base::value::Value;
 use crate::control::transformer::MonadTrans;
+use crate::control::transformer::cont::MonadCont;
 use crate::control::transformer::except::MonadExcept;
 use crate::control::transformer::maybe::{MaybeT, MaybeTInstance, StackedMaybeTInstance};
 use crate::control::transformer::reader::MonadReader;
 use crate::control::transformer::state::MonadState;
 use crate::control::transformer::writer::MonadWriter;
 use crate::data::maybe::Maybe;
+
+impl<M> MonadCont for StackedMaybeTInstance<M>
+where
+    M: MonadCont,
+{
+    fn call_cc<A, B>(
+        suspended: WrappedFn<WrappedFn<A, Self::Type<B>>, Self::Type<A>>,
+    ) -> Self::Type<A>
+    where
+        A: Value,
+        B: Value,
+    {
+        MaybeT::new(M::call_cc(WrappedFn::from(
+            move |escape: WrappedFn<Maybe<A>, M::Type<Maybe<B>>>| {
+                MaybeT::run_tr(suspended(WrappedFn::from(move |x| {
+                    MaybeT::new(escape(Maybe::Just(x)))
+                })))
+            },
+        )))
+    }
+}
 
 impl<M> MonadExcept for StackedMaybeTInstance<M>
 where

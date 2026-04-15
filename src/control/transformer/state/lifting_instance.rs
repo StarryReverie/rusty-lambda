@@ -1,12 +1,45 @@
 use crate::base::function::{ConcurrentFn, WrappedFn, constv};
 use crate::base::value::Value;
 use crate::control::transformer::MonadTrans;
+use crate::control::transformer::cont::MonadCont;
 use crate::control::transformer::except::MonadExcept;
 use crate::control::transformer::logic::MonadLogic;
 use crate::control::transformer::reader::MonadReader;
 use crate::control::transformer::state::{StackedStateTInstance, StateT, StateTInstance};
 use crate::control::transformer::writer::MonadWriter;
 use crate::data::maybe::Maybe;
+
+impl<S, M> MonadCont for StackedStateTInstance<S, M>
+where
+    S: Value,
+    M: MonadCont,
+{
+    fn call_cc<A, B>(
+        suspended: WrappedFn<WrappedFn<A, Self::Type<B>>, Self::Type<A>>,
+    ) -> Self::Type<A>
+    where
+        A: Value,
+        B: Value,
+    {
+        StateT::new(WrappedFn::from(move |state: S| {
+            let suspended = suspended.clone();
+            M::call_cc(WrappedFn::from(
+                move |escape: WrappedFn<(A, S), M::Type<(B, S)>>| {
+                    let (state, state2) = (state.clone(), state.clone());
+                    StateT::run_tr(
+                        suspended(WrappedFn::from(move |x: A| {
+                            let (escape, state) = (escape.clone(), state.clone());
+                            StateT::new(WrappedFn::from(move |_| {
+                                escape((x.clone(), state.clone()))
+                            }))
+                        })),
+                        state2,
+                    )
+                },
+            ))
+        }))
+    }
+}
 
 impl<S, M> MonadExcept for StackedStateTInstance<S, M>
 where

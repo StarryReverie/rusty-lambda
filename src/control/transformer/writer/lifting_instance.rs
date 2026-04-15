@@ -2,12 +2,35 @@ use crate::base::function::{ConcurrentFn, WrappedFn};
 use crate::base::value::Value;
 use crate::control::structure::monoid::Monoid;
 use crate::control::transformer::MonadTrans;
+use crate::control::transformer::cont::MonadCont;
 use crate::control::transformer::except::MonadExcept;
 use crate::control::transformer::logic::MonadLogic;
 use crate::control::transformer::reader::MonadReader;
 use crate::control::transformer::state::MonadState;
 use crate::control::transformer::writer::{StackedWriterTInstance, WriterT, WriterTInstance};
 use crate::data::maybe::Maybe;
+
+impl<W, M> MonadCont for StackedWriterTInstance<W, M>
+where
+    W: Monoid + Value,
+    M: MonadCont,
+{
+    fn call_cc<A, B>(
+        suspended: WrappedFn<WrappedFn<A, Self::Type<B>>, Self::Type<A>>,
+    ) -> Self::Type<A>
+    where
+        A: Value,
+        B: Value,
+    {
+        WriterT::new(M::call_cc(WrappedFn::from(
+            move |escape: WrappedFn<(A, W), M::Type<(B, W)>>| {
+                WriterT::run_tr(suspended(WrappedFn::from(move |x| {
+                    WriterT::new(escape((x, W::empty())))
+                })))
+            },
+        )))
+    }
+}
 
 impl<W, M> MonadExcept for StackedWriterTInstance<W, M>
 where

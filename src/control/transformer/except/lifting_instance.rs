@@ -1,11 +1,34 @@
 use crate::base::function::{ConcurrentFn, WrappedFn, id};
 use crate::base::value::Value;
 use crate::control::transformer::MonadTrans;
+use crate::control::transformer::cont::MonadCont;
 use crate::control::transformer::except::{ExceptT, ExceptTInstance, StackedExceptTInstance};
 use crate::control::transformer::reader::MonadReader;
 use crate::control::transformer::state::MonadState;
 use crate::control::transformer::writer::MonadWriter;
 use crate::data::either::Either;
+
+impl<E, M> MonadCont for StackedExceptTInstance<E, M>
+where
+    E: Value,
+    M: MonadCont,
+{
+    fn call_cc<A, B>(
+        suspended: WrappedFn<WrappedFn<A, Self::Type<B>>, Self::Type<A>>,
+    ) -> Self::Type<A>
+    where
+        A: Value,
+        B: Value,
+    {
+        ExceptT::new(M::call_cc(WrappedFn::from(
+            move |escape: WrappedFn<Either<E, A>, M::Type<Either<E, B>>>| {
+                ExceptT::run_tr(suspended(WrappedFn::from(move |x| {
+                    ExceptT::new(escape(Either::Right(x)))
+                })))
+            },
+        )))
+    }
+}
 
 impl<E, M> MonadReader for StackedExceptTInstance<E, M>
 where

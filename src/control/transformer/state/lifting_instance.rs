@@ -1,10 +1,12 @@
-use crate::base::function::{ConcurrentFn, WrappedFn};
+use crate::base::function::{ConcurrentFn, WrappedFn, constv};
 use crate::base::value::Value;
 use crate::control::transformer::MonadTrans;
 use crate::control::transformer::except::MonadExcept;
+use crate::control::transformer::logic::MonadLogic;
 use crate::control::transformer::reader::MonadReader;
 use crate::control::transformer::state::{StackedStateTInstance, StateT, StateTInstance};
 use crate::control::transformer::writer::MonadWriter;
+use crate::data::maybe::Maybe;
 
 impl<S, M> MonadExcept for StackedStateTInstance<S, M>
 where
@@ -32,6 +34,81 @@ where
                 WrappedFn::from(move |error| {
                     StateT::run_tr(handler.view().call(error), state.clone())
                 }),
+            )
+        }))
+    }
+}
+
+impl<S, M> MonadLogic for StackedStateTInstance<S, M>
+where
+    S: Value,
+    M: MonadLogic,
+{
+    fn split<A>(xs: Self::Type<A>) -> Self::Type<Maybe<(A, Self::Type<A>)>>
+    where
+        A: Value,
+    {
+        StateT::new(WrappedFn::from(move |state: S| {
+            let cons = M::split(StateT::run_tr(&xs, state.clone()));
+            M::fmap(
+                WrappedFn::from(move |cons| match cons {
+                    Maybe::Nothing => (Maybe::Nothing, state.clone()),
+                    Maybe::Just(((x, state), xs)) => {
+                        let xs = StateT::new(constv(xs));
+                        (Maybe::Just((x, xs)), state)
+                    }
+                }),
+                cons,
+            )
+        }))
+    }
+
+    fn interleave<A>(xs: Self::Type<A>, ys: Self::Type<A>) -> Self::Type<A>
+    where
+        A: Value,
+    {
+        StateT::new(WrappedFn::from(move |state: S| {
+            let xs = StateT::run_tr(&xs, state.clone());
+            let ys = StateT::run_tr(&ys, state);
+            M::interleave(xs, ys)
+        }))
+    }
+
+    fn fair_bind<A, B, G>(xs: Self::Type<A>, g: G) -> Self::Type<B>
+    where
+        A: Value,
+        B: Value,
+        G: for<'a> Value<View<'a>: ConcurrentFn<A, Output = Self::Type<B>>>,
+    {
+        StateT::new(WrappedFn::from(move |state: S| {
+            let xs = StateT::run_tr(&xs, state.clone());
+            let g = g.clone();
+            M::fair_bind(
+                xs,
+                WrappedFn::from(move |(x, state)| {
+                    let ys = g.view().call(x);
+                    StateT::run_tr(ys, state)
+                }),
+            )
+        }))
+    }
+
+    fn ifte<A, B, G>(xs: Self::Type<A>, then_clause: G, else_clause: Self::Type<B>) -> Self::Type<B>
+    where
+        A: Value,
+        B: Value,
+        G: for<'a> Value<View<'a>: ConcurrentFn<A, Output = Self::Type<B>>>,
+    {
+        StateT::new(WrappedFn::from(move |state: S| {
+            let xs = StateT::run_tr(&xs, state.clone());
+            let then_clause = then_clause.clone();
+            M::ifte(
+                xs,
+                WrappedFn::from(move |(x, state)| {
+                    let ys = then_clause.view().call(x);
+                    StateT::run_tr(ys, state)
+                }),
+                StateT::run_tr(&else_clause, state),
             )
         }))
     }

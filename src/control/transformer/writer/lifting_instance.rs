@@ -3,9 +3,11 @@ use crate::base::value::Value;
 use crate::control::structure::monoid::Monoid;
 use crate::control::transformer::MonadTrans;
 use crate::control::transformer::except::MonadExcept;
+use crate::control::transformer::logic::MonadLogic;
 use crate::control::transformer::reader::MonadReader;
 use crate::control::transformer::state::MonadState;
 use crate::control::transformer::writer::{StackedWriterTInstance, WriterT, WriterTInstance};
+use crate::data::maybe::Maybe;
 
 impl<W, M> MonadExcept for StackedWriterTInstance<W, M>
 where
@@ -29,6 +31,25 @@ where
         WriterT::new(M::catch_error(
             WriterT::run_tr(fallible),
             WrappedFn::from(move |error| WriterT::run_tr(handler.view().call(error))),
+        ))
+    }
+}
+
+impl<W, M> MonadLogic for StackedWriterTInstance<W, M>
+where
+    W: Monoid + Value,
+    M: MonadLogic,
+{
+    fn split<A>(xs: Self::Type<A>) -> Self::Type<Maybe<(A, Self::Type<A>)>>
+    where
+        A: Value,
+    {
+        WriterT::new(M::fmap(
+            &(|cons| match cons {
+                Maybe::Nothing => (Maybe::Nothing, W::empty()),
+                Maybe::Just(((x, log), xs)) => (Maybe::Just((x, WriterT::new(xs))), log),
+            }),
+            M::split(WriterT::run_tr(xs)),
         ))
     }
 }

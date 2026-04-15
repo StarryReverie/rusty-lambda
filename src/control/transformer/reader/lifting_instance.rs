@@ -2,9 +2,11 @@ use crate::base::function::{ConcurrentFn, WrappedFn};
 use crate::base::value::Value;
 use crate::control::transformer::MonadTrans;
 use crate::control::transformer::except::MonadExcept;
+use crate::control::transformer::logic::MonadLogic;
 use crate::control::transformer::reader::{ReaderT, ReaderTInstance, StackedReaderTInstance};
 use crate::control::transformer::state::MonadState;
 use crate::control::transformer::writer::MonadWriter;
+use crate::data::maybe::Maybe;
 
 impl<R, M> MonadExcept for StackedReaderTInstance<R, M>
 where
@@ -32,6 +34,27 @@ where
                 WrappedFn::from(move |error| {
                     ReaderT::run_tr(handler.view().call(error), env.clone())
                 }),
+            )
+        }))
+    }
+}
+
+impl<R, M> MonadLogic for StackedReaderTInstance<R, M>
+where
+    R: Value,
+    M: MonadLogic,
+{
+    fn split<A>(xs: Self::Type<A>) -> Self::Type<Maybe<(A, Self::Type<A>)>>
+    where
+        A: Value,
+    {
+        ReaderT::new(WrappedFn::from(move |env| {
+            M::fmap(
+                &(|cons| match cons {
+                    Maybe::Nothing => Maybe::Nothing,
+                    Maybe::Just((x, xs)) => Maybe::Just((x, ReaderTInstance::lift(xs))),
+                }),
+                M::split(ReaderT::run_tr(&xs, env)),
             )
         }))
     }

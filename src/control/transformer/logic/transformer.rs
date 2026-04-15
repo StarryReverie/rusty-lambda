@@ -1,3 +1,4 @@
+use std::borrow::Borrow;
 use std::marker::PhantomData;
 
 use crate::base::computation::Thunk;
@@ -6,8 +7,10 @@ use crate::base::value::{SimpleValue, Value};
 use crate::control::context::ContextConstructor;
 use crate::control::context::applicative::Applicative;
 use crate::control::context::monad::Monad;
+use crate::control::structure::functor::Functor;
 use crate::control::transformer::{MonadTrans, StackedMonadTrans, TransConstructor};
-use crate::data::maybe::Maybe;
+use crate::data::list::List;
+use crate::data::maybe::{Maybe, MaybeInstance};
 
 pub type LogicTStep<M, A> = Maybe<(A, LogicT<M, A>)>;
 
@@ -26,35 +29,90 @@ where
         Self(thunk)
     }
 
-    pub fn decompose(&self) -> M::Type<LogicTStep<M, A>> {
-        Thunk::force(&self.0).clone()
-    }
-}
-
-impl<M, A> LogicT<M, A>
-where
-    M: Applicative,
-    A: Value,
-{
-    pub fn empty() -> Self {
+    pub fn empty() -> Self
+    where
+        M: Applicative,
+    {
         Self::new(Thunk::immediate(M::pure(Maybe::Nothing)))
     }
 
-    pub fn cons(head: A, tail: Self) -> Self {
+    pub fn cons(head: A, tail: Self) -> Self
+    where
+        M: Applicative,
+    {
         Self::new(Thunk::lazy(move || M::pure(Maybe::Just((head, tail)))))
     }
 
-    pub fn singleton(value: A) -> Self {
+    pub fn singleton(value: A) -> Self
+    where
+        M: Applicative,
+    {
         Self::cons(value, Self::empty())
     }
-}
 
-impl<M, A> LogicT<M, A>
-where
-    M: Monad,
-    A: Value,
-{
-    pub fn append(self, other: Self) -> Self {
+    pub fn decompose(&self) -> M::Type<LogicTStep<M, A>> {
+        Thunk::force(&self.0).clone()
+    }
+
+    pub fn observe_tr(trans: impl Borrow<Self>) -> M::Type<Maybe<A>>
+    where
+        M: Functor,
+    {
+        M::fmap(
+            &(|cons| MaybeInstance::fmap(&(|(x, _)| x), cons)),
+            trans.borrow().decompose(),
+        )
+    }
+
+    pub fn observe_many_tr(n: usize, trans: impl Borrow<Self>) -> M::Type<List<A>>
+    where
+        M: Monad,
+    {
+        fn observe_many_tr_impl<M: Monad, A: Value>(
+            n: usize,
+            trans: &LogicT<M, A>,
+        ) -> M::Type<List<A>> {
+            if n == 0 {
+                M::pure(List::empty())
+            } else {
+                M::bind(
+                    trans.decompose(),
+                    WrappedFn::from(move |cons: Maybe<(A, LogicT<M, A>)>| match cons {
+                        Maybe::Nothing => M::pure(List::empty()),
+                        Maybe::Just((x, xs)) => M::fmap(
+                            WrappedFn::from(move |xs| List::cons(x.clone(), xs)),
+                            observe_many_tr_impl(n - 1, &xs),
+                        ),
+                    }),
+                )
+            }
+        }
+        observe_many_tr_impl(n, trans.borrow())
+    }
+
+    pub fn observe_all_tr(trans: impl Borrow<Self>) -> M::Type<List<A>>
+    where
+        M: Monad,
+    {
+        fn observe_all_tr_impl<M: Monad, A: Value>(trans: &LogicT<M, A>) -> M::Type<List<A>> {
+            M::bind(
+                trans.decompose(),
+                WrappedFn::from(move |cons: Maybe<(A, LogicT<M, A>)>| match cons {
+                    Maybe::Nothing => M::pure(List::empty()),
+                    Maybe::Just((x, xs)) => M::fmap(
+                        WrappedFn::from(move |xs| List::cons(x.clone(), xs)),
+                        observe_all_tr_impl(&xs),
+                    ),
+                }),
+            )
+        }
+        observe_all_tr_impl(trans.borrow())
+    }
+
+    pub fn append(self, other: Self) -> Self
+    where
+        M: Monad,
+    {
         Self::new(Thunk::lazy(move || {
             M::bind(
                 self.decompose(),

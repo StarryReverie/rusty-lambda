@@ -1,3 +1,4 @@
+use crate::base::computation::Computation;
 use crate::base::function::WrappedFn;
 use crate::base::value::Concurrent;
 
@@ -28,6 +29,21 @@ where
     fn call(&self, argument: T) -> Self::Output {
         self(argument)
     }
+}
+
+pub trait ConcurrentTcFn<T>: ConcurrentFn<T, Output = Computation<Self::OutputInner>> {
+    type OutputInner;
+
+    fn call_eval(&self, argument: T) -> Self::OutputInner {
+        self.call(argument).eval()
+    }
+}
+
+impl<T, R, F> ConcurrentTcFn<T> for F
+where
+    F: ConcurrentFn<T, Output = Computation<R>>,
+{
+    type OutputInner = R;
 }
 
 #[cfg(test)]

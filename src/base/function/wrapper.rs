@@ -2,12 +2,15 @@ use std::marker::PhantomData;
 use std::ops::Deref;
 use std::sync::Arc;
 
+use crate::base::computation::Computation;
 use crate::base::function::{ConcurrentFn, constv};
 use crate::base::value::{StaticConcurrent, Value};
 use crate::control::context::ContextConstructor;
 use crate::control::context::applicative::{Applicative, ApplicativeExt};
 use crate::control::context::monad::{Monad, MonadExt};
 use crate::control::structure::functor::{Functor, FunctorExt};
+
+pub type WrappedTcFn<T, R> = WrappedFn<T, Computation<R>>;
 
 pub struct WrappedFn<T, R>(Arc<dyn Fn(T) -> R + Send + Sync + 'static>);
 

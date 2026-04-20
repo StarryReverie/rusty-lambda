@@ -1,7 +1,9 @@
 use std::borrow::Borrow;
+use std::marker::PhantomData;
 use std::sync::Arc;
 
-use crate::base::value::{StaticConcurrent, Value};
+use crate::base::value::{SimpleValue, StaticConcurrent, Value};
+use crate::control::context::ContextConstructor;
 use crate::system::io::description::{IOAction, IOExecution};
 
 pub struct IO<C, A>(Arc<dyn IOAction<C, Output = A>>);
@@ -32,4 +34,30 @@ impl<C, A> Clone for IO<C, A> {
     fn clone(&self) -> Self {
         Self(Arc::clone(&self.0))
     }
+}
+
+impl<C, A> SimpleValue for IO<C, A>
+where
+    C: StaticConcurrent,
+    A: StaticConcurrent,
+{
+}
+
+#[derive(Debug, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+pub struct IOInstance<C>(PhantomData<C>);
+
+impl<C> Clone for IOInstance<C> {
+    fn clone(&self) -> Self {
+        Self(PhantomData)
+    }
+}
+
+impl<C> ContextConstructor for IOInstance<C>
+where
+    C: StaticConcurrent,
+{
+    type Type<A>
+        = IO<C, A>
+    where
+        A: Value;
 }
